@@ -1,33 +1,51 @@
+// app/(tabs)/_layout.tsx (O "MENU DE ABAS")
+
 import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import Colors from '../../constants/Colors'; // 
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: Colors.primary, // Cor laranja
+        tabBarInactiveTintColor: Colors.grey, // Cor cinza
+        tabBarStyle: {
+          backgroundColor: Colors.white,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
+      }}
+    >
       <Tabs.Screen
-        name="index"
-        options={{
+        name="home"
+        options={{ 
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          // TODO: Adicionar ícone
         }}
       />
       <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        name="estabelecimentos"
+        options={{ 
+          title: 'Estabelecimentos',
+          // TODO: Adicionar ícone
+        }}
+      />
+      <Tabs.Screen
+        name="listas"
+        options={{ 
+          title: 'Listas',
+          // TODO: Adicionar ícone
+        }}
+      />
+      <Tabs.Screen
+        name="perfil"
+        options={{ 
+          title: 'Perfil',
+          // TODO: Adicionar ícone
         }}
       />
     </Tabs>
