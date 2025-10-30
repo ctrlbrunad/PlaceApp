@@ -1,26 +1,30 @@
-// constants/Colors.ts
+// constants/Colors.ts (VERSÃO COM AS NOVAS CORES)
 
-// Cores extraídas do seu logo e paleta
-const tintColor = '#F5A623'; // O laranja/amarelo principal
+// Cores exatas do seu design
+const primaryOrange = '#FBAF26';      // Amarelo mais escurin
+const categoryYellow = '#FFCF60';     // Amarelo mais claro (fundo do botão)
+const darkBrown = '#6B3E1E';          // Marrom (texto e ícones)
+const searchGrey = '#D9D9D9';         // Cinza da barra de busca
+const lightCream = '#FDF8E1';         // Fundo do app (do protótipo)
 
 export default {
   // Cores principais
-  primary: tintColor,
-  background: '#FDF8E1', // Aquele creme bem claro
-  text: '#4A2C2A', // O marrom escuro para texto
+  primary: primaryOrange,
+  background: lightCream,
+  text: darkBrown,
 
-  // Cores de UI
-  tint: tintColor,
+  // Cores Específicas
+  categoryBackground: categoryYellow, // Fundo do botão da categoria
+  searchBar: searchGrey,              // Fundo da barra de busca
+  
+  // Cores de UI (baseadas nas principais)
+  tint: primaryOrange,
   tabIconDefault: '#ccc',
-  tabIconSelected: tintColor,
-
-  // Cores de Acento (da paleta)
-  accentOrange: '#F57C51',
-  accentBlue: '#50E3C2', // (Você tinha um azul/verde na paleta)
-
+  tabIconSelected: primaryOrange,
+  
   // Neutras
   white: '#fff',
   black: '#000',
-  grey: '#ccc',
-  lightGrey: '#f0f0f0',
+  grey: '#ccc', // Cinza mais escuro para bordas/texto
+  lightGrey: '#f0f0f0', // Cinza bem claro
 };
