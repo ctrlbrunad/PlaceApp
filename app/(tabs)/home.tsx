@@ -157,7 +157,7 @@ export default function HomeScreen() {
 
 // --- ESTILOS (AJUSTE NO BOTÃO E TEXTO DA CATEGORIA) ---
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.white },
+  safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: 15, paddingBottom: 30 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
