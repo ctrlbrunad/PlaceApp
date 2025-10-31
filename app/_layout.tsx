@@ -1,4 +1,4 @@
-// app/_layout.tsx (VERSÃO COM LÓGICA DE REDIRECIONAMENTO CORRIGIDA)
+// app/_layout.tsx (VERSÃO COM LÓGICA DE REDIRECIONAMENTO FINALMENTE CORRIGIDA)
 
 import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
@@ -19,6 +19,7 @@ function RootLayoutNav() {
       return; // Espera o AuthContext carregar
     }
 
+    // Define quais rotas são "públicas" (do grupo auth)
     const inAuthGroup = segments.includes('login') || segments.includes('register');
     // Verifica se estamos na raiz (/)
     const isAtRoot = segments.length === 0; 
@@ -43,7 +44,7 @@ function RootLayoutNav() {
 
   }, [isAuthenticated, isLoading, segments, router]);
 
-  // Tela de "carregando"
+  // Tela de "carregando" (mostra enquanto 'isLoading' é true)
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -52,33 +53,45 @@ function RootLayoutNav() {
     );
   }
 
-  // Define o Stack Navigator (igual a antes)
+  // Define o Stack Navigator (com todas as suas rotas)
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" /> 
       <Stack.Screen name="(tabs)" />
+      
+      {/* Tela Modal 'criarLista' */}
       <Stack.Screen 
         name="criarLista"
         options={{ 
-          headerShown: true, 
-          title: 'Criar Nova Lista',
-          presentation: 'modal',
+          headerShown: true, title: 'Criar Nova Lista', presentation: 'modal',
           headerStyle: { backgroundColor: Colors.background },
           headerTitleStyle: { color: Colors.text, fontWeight: 'bold' },
           headerTintColor: Colors.text,
         }} 
       />
+      
+      {/* Tela de Detalhes da Lista */}
       <Stack.Screen 
-        name="lista/[id]" // Nome da pasta/arquivo: app/lista/[id].tsx
+        name="lista/[id]"
         options={{ 
-          headerShown: true, // Mostra o cabeçalho (o nome da lista)
+          headerShown: true,
           headerStyle: { backgroundColor: Colors.background },
           headerTitleStyle: { color: Colors.text, fontWeight: 'bold' },
+          headerTintColor: Colors.text,
+        }} 
+      />
+      
+      {/* Tela de Detalhes do Estabelecimento */}
+      <Stack.Screen 
+        name="estabelecimento/[id]"
+        options={{ 
+          headerShown: true,
+          headerTransparent: true,
+          headerTitle: '',
           headerTintColor: Colors.text,
         }} 
       />
     </Stack>
-    
   );
 }
 
