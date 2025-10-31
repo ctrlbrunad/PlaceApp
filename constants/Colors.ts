@@ -17,11 +17,12 @@ export default {
   categoryBackground: categoryYellow, // Fundo do botão da categoria
   searchBar: searchGrey,              // Fundo da barra de busca
   
+  
   // Cores de UI (baseadas nas principais)
   tint: primaryOrange,
   tabIconDefault: '#ccc',
   tabIconSelected: primaryOrange,
-  
+  accentOrange: '#F57C51',
   // Neutras
   white: '#fff',
   black: '#000',

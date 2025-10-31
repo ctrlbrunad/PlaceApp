@@ -1,15 +1,14 @@
-// app/(tabs)/_layout.tsx (VERSÃO COM O RESET CORRIGIDO USANDO 'useRouter')
+// app/(tabs)/_layout.tsx (O "MENU DE ABAS")
 
-import React from 'react';
-// --- 1. IMPORTA 'useRouter' E 'Tabs' (NÃO 'useNavigation') ---
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Tabs, useRouter } from 'expo-router';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'; // Importa os tipos
+import { Tabs } from 'expo-router';
+import React from 'react';
 import Colors from '../../constants/Colors';
-// Não precisamos mais do 'useNavigation' ou 'ParamListBase'
 
 export default function TabLayout() {
-  // --- 2. USA O 'useRouter' DO EXPO ---
-  const router = useRouter();
+  // Tipa o hook de navegação para corrigir os erros de 'never'
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   return (
     <Tabs
@@ -21,6 +20,7 @@ export default function TabLayout() {
         tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
       }}
     >
+      {/* Aba Home */}
       <Tabs.Screen
         name="home"
         options={{
@@ -30,6 +30,7 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* Aba Estabelecimentos */}
       <Tabs.Screen
         name="estabelecimentos"
         options={{
@@ -39,28 +40,42 @@ export default function TabLayout() {
             <FontAwesome5 name="store" color={color} size={size * 0.9} />
           ),
         }}
-        // --- 3. LISTENER SIMPLIFICADO ---
         listeners={{
           tabPress: (e) => {
-            // Previne o comportamento padrão (que é só focar na aba atual)
-            e.preventDefault(); 
-            
-            // Força a navegação para a rota base, limpando os query params
-            // Isso vai recarregar a tela 'estabelecimentos.tsx' sem o
-            // '?categoria=Pizzaria'
-            router.push('/estabelecimentos'); 
+            const state = navigation.getState();
+            if (!state) return; // Checagem de segurança
+            const currentRoute = state.routes.find(r => r.name === 'estabelecimentos');
+            if (currentRoute && currentRoute.state && (currentRoute.state.routes?.length ?? 0) > 1) {
+              e.preventDefault();
+              navigation.navigate('estabelecimentos', { params: {}, merge: false });
+            }
           },
         }}
       />
+      {/* Aba Places (Listas) */}
       <Tabs.Screen
         name="listas"
         options={{
-          title: 'Listas',
+          tabBarLabel: 'Places',
+          headerTitle: 'Minhas Listas',
           tabBarIcon: ({ color, size }) => (
             <FontAwesome5 name="list-alt" color={color} size={size * 0.9} />
           ),
         }}
+        listeners={{
+          tabPress: (e) => {
+            const state = navigation.getState();
+            if (!state) return;
+            const currentRoute = state.routes.find(r => r.name === 'listas');
+            // Se estiver em uma sub-rota (ex: /lista/6), reseta
+            if (currentRoute && currentRoute.state && (currentRoute.state.routes?.length ?? 0) > 1) { 
+              e.preventDefault();
+              navigation.navigate('listas', { params: {}, merge: false });
+            }
+          },
+        }}
       />
+      {/* Aba Perfil */}
       <Tabs.Screen
         name="perfil"
         options={{

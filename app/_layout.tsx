@@ -1,9 +1,11 @@
-// app/_layout.tsx (O "PORTEIRO" FINALMENTE CORRIGIDO)
+// app/_layout.tsx (VERSÃO COM LÓGICA DE REDIRECIONAMENTO CORRIGIDA)
 
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import Colors from '../constants/Colors'; // Importa as cores para o loading
+
+// Caminhos corretos (um nível acima)
+import Colors from '../constants/Colors';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 
 // O "Porteiro" em si
@@ -18,9 +20,10 @@ function RootLayoutNav() {
     }
 
     const inAuthGroup = segments.includes('login') || segments.includes('register');
-    const isAtRoot = segments.length === 0; // Verifica se estamos na raiz (/)
+    // Verifica se estamos na raiz (/)
+    const isAtRoot = segments.length === 0; 
 
-    // --- LÓGICA DE REDIRECIONAMENTO FINAL ---
+    // --- LÓGICA DE REDIRECIONAMENTO CORRIGIDA ---
     if (isAuthenticated) {
       // Se está logado...
       if (inAuthGroup || isAtRoot) {
@@ -32,7 +35,7 @@ function RootLayoutNav() {
     } else {
       // Se NÃO está logado...
       if (!inAuthGroup) {
-        // ...e NÃO está no Login/Cadastro, manda pro Login.
+        // ...e NÃO está no Login/Cadastro (ex: está na raiz '/'), manda pro Login.
         router.replace('/login');
       }
       // Se já está em /login ou /register, não faz nada.
@@ -40,7 +43,7 @@ function RootLayoutNav() {
 
   }, [isAuthenticated, isLoading, segments, router]);
 
-  // Mostra "carregando" SÓ enquanto o AuthContext checa o token
+  // Tela de "carregando"
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -49,11 +52,37 @@ function RootLayoutNav() {
     );
   }
 
-  // Mostra a tela correta (Index, Login, ou Home)
-  return <Slot />;
+  // Define o Stack Navigator (igual a antes)
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" /> 
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen 
+        name="criarLista"
+        options={{ 
+          headerShown: true, 
+          title: 'Criar Nova Lista',
+          presentation: 'modal',
+          headerStyle: { backgroundColor: Colors.background },
+          headerTitleStyle: { color: Colors.text, fontWeight: 'bold' },
+          headerTintColor: Colors.text,
+        }} 
+      />
+      <Stack.Screen 
+        name="lista/[id]" // Nome da pasta/arquivo: app/lista/[id].tsx
+        options={{ 
+          headerShown: true, // Mostra o cabeçalho (o nome da lista)
+          headerStyle: { backgroundColor: Colors.background },
+          headerTitleStyle: { color: Colors.text, fontWeight: 'bold' },
+          headerTintColor: Colors.text,
+        }} 
+      />
+    </Stack>
+    
+  );
 }
 
-// O Layout Raiz do App (Envolve o app no "Cérebro")
+// O Layout Raiz (com o Provider)
 export default function RootLayout() {
   return (
     <AuthProvider>
@@ -67,6 +96,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background, // Usa a cor de fundo
+    backgroundColor: Colors.background,
   },
 });
