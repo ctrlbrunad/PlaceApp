@@ -1,17 +1,17 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert, // 1. Importe o TouchableOpacity
-    Platform // Para a sombra
-    ,
-
-    StyleSheet,
-    Text, TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Platform,
+  StyleSheet,
+  Text, TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import Colors from '../../constants/Colors';
+// --- 1. IMPORTAÇÕES ---
+import { useRouter } from 'expo-router'; // Importa o router para o link de cadastro
+import Colors from '../../constants/Colors'; // Caminho correto, pois 'constants' está na raiz
 import { useAuth } from '../../src/context/AuthContext';
 
 export default function LoginScreen() {
@@ -19,9 +19,10 @@ export default function LoginScreen() {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const router = useRouter(); // Pega o router
 
+  // --- 2. LÓGICA DE LOGIN ---
   const handleLogin = async () => {
-    // A lógica de login (handleLogin) continua igual
     if (email === '' || senha === '') {
       Alert.alert('Erro', 'Email e senha são obrigatórios.');
       return;
@@ -29,7 +30,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email, senha);
-      // O 'catch' também é o mesmo
+      // O "Porteiro" (app/_layout.tsx) vai cuidar do redirecionamento
     } catch (error) {
       setLoading(false);
       if (axios.isAxiosError(error) && error.response) {
@@ -39,11 +40,11 @@ export default function LoginScreen() {
         Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
       }
     }
-    // Não precisamos mais do setLoading(false) aqui, pois o "porteiro" vai redirecionar
+    // Não precisa de setLoading(false) aqui, o app vai navegar
   };
 
+  // --- 3. PARTE VISUAL (JSX) ---
   return (
-    // 3. APLIQUE AS CORES
     <View style={styles.container}>
       <Text style={styles.title}>Bem-vindo!</Text>
       
@@ -66,7 +67,7 @@ export default function LoginScreen() {
         placeholderTextColor={Colors.grey}
       />
       
-      {/* 4. SUBSTITUA O <Button> POR UM BOTÃO CUSTOMIZADO */}
+      {/* Botão de Entrar */}
       {loading ? (
         <ActivityIndicator size="large" color={Colors.primary} />
       ) : (
@@ -74,24 +75,32 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>ENTRAR</Text>
         </TouchableOpacity>
       )}
+
+      {/* Botão para ir ao Cadastro */}
+      <TouchableOpacity 
+        style={styles.linkButton} 
+        onPress={() => router.push('/register')} // 'push' para poder voltar
+      >
+        <Text style={styles.linkText}>Não tem uma conta? Cadastre-se</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-// 5. ATUALIZE OS ESTILOS
+// --- 4. ESTILOS ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: Colors.background, // Usa a cor de fundo do protótipo
+    backgroundColor: Colors.background, 
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
-    color: Colors.text, // Usa a cor de texto do protótipo
+    color: Colors.text, 
   },
   input: {
     height: 55,
@@ -105,12 +114,10 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   button: {
-    backgroundColor: Colors.primary, // Usa a cor primária
+    backgroundColor: Colors.primary, 
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',
-    
-    // Sombra (para dar um 'tchan')
     ...Platform.select({
       ios: {
         shadowColor: Colors.black,
@@ -127,5 +134,14 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  linkButton: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  linkText: {
+    fontSize: 14,
+    color: Colors.primary,
+    fontWeight: '600',
   },
 });
