@@ -1,16 +1,15 @@
-// app/criarLista.tsx (NOVA TELA DE FORMULÁRIO)
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    StyleSheet,
-    Switch,
-    Text, TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Platform,
+  StyleSheet,
+  Switch,
+  Text, TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Colors from '../constants/Colors';
 import api from '../src/services/api';

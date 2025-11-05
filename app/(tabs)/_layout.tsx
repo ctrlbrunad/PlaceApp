@@ -1,26 +1,30 @@
-// app/(tabs)/_layout.tsx (O "MENU DE ABAS")
+// app/(tabs)/_layout.tsx (VERSÃO COM "PLACELIST" E BOTÃO '+')
 
-import { FontAwesome5 } from '@expo/vector-icons';
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'; // Importa os tipos
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
+// O caminho correto é 2 níveis acima, pois estamos em app/(tabs)/
+import { FontAwesome5 } from '@expo/vector-icons';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
+import { TouchableOpacity } from 'react-native'; // Importa o TouchableOpacity
 import Colors from '../../constants/Colors';
 
 export default function TabLayout() {
-  // Tipa o hook de navegação para corrigir os erros de 'never'
+  const router = useRouter();
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        // O headerShown agora é controlado por cada tela (Stack.Screen)
+        // (Exceto para 'home' e 'perfil' que são simples)
+        headerShown: false, 
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.grey,
         tabBarStyle: { backgroundColor: Colors.white },
         tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
       }}
     >
-      {/* Aba Home */}
+      {/* Aba Home (igual) */}
       <Tabs.Screen
         name="home"
         options={{
@@ -30,52 +34,59 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* Aba Estabelecimentos */}
+      {/* Aba Estabelecimentos (igual) */}
       <Tabs.Screen
         name="estabelecimentos"
         options={{
-          tabBarLabel: 'Estabelec...',
-          headerTitle: 'Estabelecimentos',
+          tabBarLabel: 'Places',
+          headerTitle: 'Places',
           tabBarIcon: ({ color, size }) => (
             <FontAwesome5 name="store" color={color} size={size * 0.9} />
           ),
         }}
         listeners={{
-          tabPress: (e) => {
-            const state = navigation.getState();
-            if (!state) return; // Checagem de segurança
-            const currentRoute = state.routes.find(r => r.name === 'estabelecimentos');
-            if (currentRoute && currentRoute.state && (currentRoute.state.routes?.length ?? 0) > 1) {
-              e.preventDefault();
-              navigation.navigate('estabelecimentos', { params: {}, merge: false });
-            }
+          tabPress: (e) => { // A lógica de "resetar"
+            e.preventDefault(); 
+            router.push('/estabelecimentos'); 
           },
         }}
       />
-      {/* Aba Places (Listas) */}
+      
+      {/* --- ABA "LISTAS" ATUALIZADA --- */}
       <Tabs.Screen
         name="listas"
         options={{
-          tabBarLabel: 'Places',
-          headerTitle: 'Minhas Listas',
+          tabBarLabel: 'PlaceList', // 1. NOME MUDOU
+          headerTitle: 'Minhas PlaceLists', // Título da página
+          headerShown: true, // 2. MOSTRA O CABEÇALHO DA ABA
+          headerStyle: { backgroundColor: Colors.background },
+          headerTitleStyle: { color: Colors.text, fontWeight: 'bold' },
+          headerShadowVisible: false,
+          headerTintColor: Colors.text,
+          
+          // 3. BOTÃO '+' MOVIDO PARA CÁ
+          headerRight: () => (
+            <TouchableOpacity 
+              onPress={() => router.push('/criarLista')} 
+              style={{ marginRight: 15 }}
+            >
+              <FontAwesome5 name="plus" size={22} color={Colors.primary} />
+            </TouchableOpacity>
+          ),
+
           tabBarIcon: ({ color, size }) => (
             <FontAwesome5 name="list-alt" color={color} size={size * 0.9} />
           ),
         }}
         listeners={{
-          tabPress: (e) => {
-            const state = navigation.getState();
-            if (!state) return;
-            const currentRoute = state.routes.find(r => r.name === 'listas');
-            // Se estiver em uma sub-rota (ex: /lista/6), reseta
-            if (currentRoute && currentRoute.state && (currentRoute.state.routes?.length ?? 0) > 1) { 
-              e.preventDefault();
-              navigation.navigate('listas', { params: {}, merge: false });
-            }
+          tabPress: (e) => { // 4. Listener de Reset (igual)
+            e.preventDefault();
+            router.push('/listas'); 
           },
         }}
       />
-      {/* Aba Perfil */}
+      
+      {/* Aba Perfil (igual) */}
       <Tabs.Screen
         name="perfil"
         options={{

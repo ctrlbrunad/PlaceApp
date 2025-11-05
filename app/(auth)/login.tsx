@@ -10,8 +10,8 @@ import {
   View
 } from 'react-native';
 // --- 1. IMPORTAÇÕES ---
-import { useRouter } from 'expo-router'; // Importa o router para o link de cadastro
-import Colors from '../../constants/Colors'; // Caminho correto, pois 'constants' está na raiz
+import { useRouter } from 'expo-router';
+import Colors from '../../constants/Colors';
 import { useAuth } from '../../src/context/AuthContext';
 
 export default function LoginScreen() {

@@ -1,4 +1,4 @@
-// app/_layout.tsx (VERSÃO COM LÓGICA DE REDIRECIONAMENTO FINALMENTE CORRIGIDA)
+// app/_layout.tsx (VERSÃO FINAL CORRIGIDA)
 
 import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
@@ -15,36 +15,24 @@ function RootLayoutNav() {
   const segments = useSegments() as string[]; 
 
   useEffect(() => {
-    if (isLoading) {
-      return; // Espera o AuthContext carregar
-    }
+    if (isLoading) return; 
 
-    // Define quais rotas são "públicas" (do grupo auth)
     const inAuthGroup = segments.includes('login') || segments.includes('register');
-    // Verifica se estamos na raiz (/)
-    const isAtRoot = segments.length === 0; 
+    const isAtRoot = segments.length === 0;
+    const isProtectedRoute = !inAuthGroup; 
 
-    // --- LÓGICA DE REDIRECIONAMENTO CORRIGIDA ---
     if (isAuthenticated) {
-      // Se está logado...
       if (inAuthGroup || isAtRoot) {
-        // ...e está no Login/Cadastro OU na raiz, manda pro Home.
         router.replace('/home');
       }
-      // Se já está em /home ou outra tela logada, não faz nada.
-      
     } else {
-      // Se NÃO está logado...
-      if (!inAuthGroup) {
-        // ...e NÃO está no Login/Cadastro (ex: está na raiz '/'), manda pro Login.
+      if (isProtectedRoute) {
         router.replace('/login');
       }
-      // Se já está em /login ou /register, não faz nada.
     }
-
   }, [isAuthenticated, isLoading, segments, router]);
 
-  // Tela de "carregando" (mostra enquanto 'isLoading' é true)
+  // Tela de "carregando"
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -53,7 +41,7 @@ function RootLayoutNav() {
     );
   }
 
-  // Define o Stack Navigator (com todas as suas rotas)
+  // Define o Stack Navigator
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" /> 
@@ -85,10 +73,8 @@ function RootLayoutNav() {
       <Stack.Screen 
         name="estabelecimento/[id]"
         options={{ 
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: '',
-          headerTintColor: Colors.text,
+          headerShown: true, headerTransparent: true,
+          headerTitle: '', headerTintColor: Colors.text,
         }} 
       />
     </Stack>
