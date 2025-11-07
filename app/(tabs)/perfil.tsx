@@ -1,32 +1,54 @@
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-
-import Colors from '@/constants/Colors';
-
-
-import { useAuth } from '@/src/context/AuthContext'; //
+// --- 1. CORREÇÃO DOS IMPORTS ---
+// Trocamos os caminhos com '@/' pelos caminhos relativos
+// que seu app já usa em outros arquivos.
+import Colors from '../../constants/Colors';
+import { useAuth } from '../../src/context/AuthContext';
+import api from '../../src/services/api';
 
 const colors = Colors;
 
 export default function ProfileScreen() {
-  // 1. Pegar o USUÁRIO REAL e a FUNÇÃO DE LOGOUT do contexto
- 
   const { user, logout, isLoading } = useAuth();
+  const [stats, setStats] = useState({ reviews: 0, lists: 0 });
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
 
-  // 2. Tela de Loading
-  // Se 'isLoading' for true ou 'user' ainda for nulo, 
-  //  um loading.
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    const fetchProfileStats = async () => {
+      try {
+        setIsStatsLoading(true);
+        const response = await api.get('/users/me'); //
+        const { reviewsCount, listsCount } = response.data;
+        setStats({
+          reviews: reviewsCount || 0,
+          lists: listsCount || 0,
+        });
+      } catch (error) {
+        console.error("Erro ao buscar estatísticas do perfil:", error);
+      } finally {
+        setIsStatsLoading(false);
+      }
+    };
+    fetchProfileStats();
+  }, [user]);
+
   if (isLoading || !user) {
     return (
+      // --- 2. CORREÇÃO DO ESTILO ---
+      // Renomeado de 'styles.container' para 'styleS.container' (com 's')
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
-  // 3. Tela de Perfil (agora temos o 'user')
   return (
     <>
       <Stack.Screen
@@ -36,7 +58,6 @@ export default function ProfileScreen() {
           headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
           headerShadowVisible: false,
           headerRight: () => (
-            // 4. BOTÃO DE LOGOUT que você pediu
             <TouchableOpacity onPress={logout} style={{ marginRight: 16 }}>
               <Feather name="log-out" size={24} color={colors.text} />
             </TouchableOpacity>
@@ -44,10 +65,11 @@ export default function ProfileScreen() {
         }}
       />
 
+      {/* --- 2. CORREÇÃO DO ESTILO ---
+          Garantindo que tudo use 'styles' (com 's') */}
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.profileCard}>
           <TouchableOpacity style={styles.avatarContainer}>
-            {/* 5. Usar dados REAIS (user.imageUrl) */}
             {user.imageUrl ? ( 
               <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
             ) : (
@@ -56,28 +78,25 @@ export default function ProfileScreen() {
               </View>
             )}
           </TouchableOpacity>
-
-          {/* 6. Usar dados REAIS (user.nome e user.email) 
-               Seu authController.js envia 'nome' e 'email' */}
+          
           <Text style={[styles.userName, { color: colors.text }]}>{user.nome}</Text>
           <Text style={styles.userHandle}>{user.email}</Text> 
 
           <View style={styles.statsContainer}>
-            {/* NOTA: As contagens (reviews, lists) ainda não estão conectadas.
-              Elas virão do backend na próxima etapa (via GET /users/me)
-            */}
+            {/* Box de Avaliações */}
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
               <FontAwesome name="star" size={24} color={colors.primary} />
               <Text style={[styles.statNumber, { color: colors.text }]}>
-                {user.reviews || 0} {/* (Ainda fictício) */}
+                {isStatsLoading ? '...' : stats.reviews}
               </Text>
               <Text style={styles.statLabel}>Avaliações</Text>
             </View>
 
+            {/* Box de Listas */}
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
               <FontAwesome name="list-ul" size={24} color={colors.primary} />
               <Text style={[styles.statNumber, { color: colors.text }]}>
-                {user.lists || 0} {/* (Ainda fictício) */}
+                {isStatsLoading ? '...' : stats.lists}
               </Text>
               <Text style={styles.statLabel}>Listas</Text>
             </View>
@@ -88,14 +107,15 @@ export default function ProfileScreen() {
   );
 }
 
-// (Os estilos permanecem os mesmos da versão anterior, 
-// apenas adicionei um 'center' para o loading)
+// --- 2. CORREÇÃO DO ESTILO ---
+// Renomeado de 'style' para 'styles' (com 's')
+// para corresponder ao uso (styles.container, styles.profileCard, etc.)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
   },
-  center: { // Para centralizar o ActivityIndicator
+  center: {
     justifyContent: 'center',
     alignItems: 'center',
   },
