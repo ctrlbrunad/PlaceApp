@@ -67,11 +67,7 @@ export default function ListaDetalheScreen() {
     }
     navigation.setOptions({
       title: lista.nome, // Define o título da tela
-      headerRight: () => ( // Adiciona o botão de lixeira
-        <TouchableOpacity onPress={handleDeletarLista} style={{ marginRight: 15 }}>
-          <FontAwesome5 name="trash-alt" size={20} color={Colors.accentOrange} />
-        </TouchableOpacity>
-      )
+     
     });
   }, [navigation, lista, isLoading, handleDeletarLista]);
 
