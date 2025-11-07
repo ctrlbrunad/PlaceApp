@@ -1,14 +1,13 @@
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; // Importar o useState
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-// --- 1. CORREÇÃO DOS IMPORTS ---
-// Trocamos os caminhos com '@/' pelos caminhos relativos
-// que seu app já usa em outros arquivos.
 import Colors from '../../constants/Colors';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
+
+// 1. Importar o novo modal
+import ProfileMenuModal from '../../components/ProfileMenuModal';
 
 const colors = Colors;
 
@@ -17,6 +16,9 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState({ reviews: 0, lists: 0 });
   const [isStatsLoading, setIsStatsLoading] = useState(true);
 
+  // 2. Adicionar estado para controlar o modal do menu
+  const [isMenuVisible, setMenuVisible] = useState(false);
+
   useEffect(() => {
     if (!user) {
       return;
@@ -24,7 +26,7 @@ export default function ProfileScreen() {
     const fetchProfileStats = async () => {
       try {
         setIsStatsLoading(true);
-        const response = await api.get('/users/me'); //
+        const response = await api.get('/users/me');
         const { reviewsCount, listsCount } = response.data;
         setStats({
           reviews: reviewsCount || 0,
@@ -37,12 +39,10 @@ export default function ProfileScreen() {
       }
     };
     fetchProfileStats();
-  }, [user]);
+  }, [user]); 
 
   if (isLoading || !user) {
     return (
-      // --- 2. CORREÇÃO DO ESTILO ---
-      // Renomeado de 'styles.container' para 'styleS.container' (com 's')
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
@@ -58,16 +58,21 @@ export default function ProfileScreen() {
           headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
           headerShadowVisible: false,
           headerRight: () => (
-            <TouchableOpacity onPress={logout} style={{ marginRight: 16 }}>
-              <Feather name="log-out" size={24} color={colors.text} />
+            // 3. MUDAR o ícone de 'log-out' para 'menu'
+            // e o onPress para abrir o modal
+            <TouchableOpacity 
+              onPress={() => setMenuVisible(true)} // <- MUDANÇA
+              style={{ marginRight: 16 }}
+            >
+              <Feather name="menu" size={24} color={colors.text} /> {/* <- MUDANÇA */}
             </TouchableOpacity>
           ),
         }}
       />
 
-      {/* --- 2. CORREÇÃO DO ESTILO ---
-          Garantindo que tudo use 'styles' (com 's') */}
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* ... (Todo o seu <View style={styles.profileCard}>... </View> continua aqui) ... */}
+        
         <View style={styles.profileCard}>
           <TouchableOpacity style={styles.avatarContainer}>
             {user.imageUrl ? ( 
@@ -83,7 +88,6 @@ export default function ProfileScreen() {
           <Text style={styles.userHandle}>{user.email}</Text> 
 
           <View style={styles.statsContainer}>
-            {/* Box de Avaliações */}
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
               <FontAwesome name="star" size={24} color={colors.primary} />
               <Text style={[styles.statNumber, { color: colors.text }]}>
@@ -92,7 +96,6 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>Avaliações</Text>
             </View>
 
-            {/* Box de Listas */}
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
               <FontAwesome name="list-ul" size={24} color={colors.primary} />
               <Text style={[styles.statNumber, { color: colors.text }]}>
@@ -102,14 +105,20 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+            
       </ScrollView>
+
+      {/* 4. ADICIONAR o modal no final do JSX */}
+      <ProfileMenuModal
+        visible={isMenuVisible}
+        onClose={() => setMenuVisible(false)}
+        onLogout={logout} // Passa a função de logout para o modal
+      />
     </>
   );
 }
 
-// --- 2. CORREÇÃO DO ESTILO ---
-// Renomeado de 'style' para 'styles' (com 's')
-// para corresponder ao uso (styles.container, styles.profileCard, etc.)
+// --- Estilos (Os mesmos de antes) ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,

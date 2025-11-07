@@ -1,98 +1,102 @@
-// app/(tabs)/_layout.tsx (VERSÃO COM "PLACELIST" E BOTÃO '+')
-
-import { Tabs, useRouter } from 'expo-router';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 import React from 'react';
-// O caminho correto é 2 níveis acima, pois estamos em app/(tabs)/
-import { FontAwesome5 } from '@expo/vector-icons';
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
-import { TouchableOpacity } from 'react-native'; // Importa o TouchableOpacity
 import Colors from '../../constants/Colors';
 
+// --- ESTA É A FUNÇÃO CORRIGIDA ---
+// Esta definição de tipo é mais avançada e diz ao TypeScript
+// que se 'isIonicons' for true, 'name' DEVE ser um ícone do Ionicons,
+// e se for false (ou não existir), 'name' DEVE ser um ícone do FontAwesome.
+// Isso resolve o erro "Type 'string' is not assignable..."
+
+// 1. Define os tipos de props separadamente
+type FontAwesomeProps = {
+  name: React.ComponentProps<typeof FontAwesome>['name'];
+  color: string;
+  isIonicons?: false; // 'isIonicons' é falso ou indefinido
+}
+type IoniconsProps = {
+  name: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  isIonicons: true; // 'isIonicons' é verdadeiro
+}
+
+// 2. O tipo final do nosso componente é uma união dos dois
+type TabBarIconProps = FontAwesomeProps | IoniconsProps;
+
+// 3. A função agora usa os tipos corretos
+function TabBarIcon(props: TabBarIconProps) {
+  if (props.isIonicons) {
+    // Se 'isIonicons' é true, TypeScript agora SABE que 'props.name' é um nome de Ionicons.
+    return <Ionicons size={28} style={{ marginBottom: -3 }} name={props.name} color={props.color} />;
+  }
+  // Se 'isIonicons' é false, TypeScript agora SABE que 'props.name' é um nome de FontAwesome.
+  return <FontAwesome size={24} style={{ marginBottom: -3 }} name={props.name} color={props.color} />;
+}
+// ------------------------------------------
+
 export default function TabLayout() {
-  const router = useRouter();
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const colors = Colors;
 
   return (
     <Tabs
       screenOptions={{
-        // O headerShown agora é controlado por cada tela (Stack.Screen)
-        // (Exceto para 'home' e 'perfil' que são simples)
-        headerShown: false, 
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.grey,
-        tabBarStyle: { backgroundColor: Colors.white },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
-      }}
-    >
-      {/* Aba Home (igual) */}
+        tabBarActiveTintColor: colors.primary, 
+        tabBarInactiveTintColor: colors.grey,  
+        tabBarStyle: { 
+          backgroundColor: colors.white, 
+        },
+        headerShown: true, // Importante para o menu do perfil
+      }}>
+      
+      {/* Aba Home */}
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="home" color={color} size={size * 0.9} />
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} isIonicons />,
+          headerShown: false, 
         }}
       />
-      {/* Aba Estabelecimentos (igual) */}
+
+      {/* Aba Estabelecimentos (Places) */}
       <Tabs.Screen
         name="estabelecimentos"
         options={{
-          tabBarLabel: 'Places',
-          headerTitle: 'Places',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="store" color={color} size={size * 0.9} />
+          title: 'Places', 
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon 
+              name="storefront-outline" 
+              color={color} 
+              isIonicons // Esta prop 'isIonicons: true' agora corresponde ao tipo IoniconsProps
+            />
           ),
-        }}
-        listeners={{
-          tabPress: (e) => { // A lógica de "resetar"
-            e.preventDefault(); 
-            router.push('/estabelecimentos'); 
-          },
+          headerShown: false,
         }}
       />
       
-      {/* --- ABA "LISTAS" ATUALIZADA --- */}
+      {/* Aba Listas */}
       <Tabs.Screen
         name="listas"
         options={{
-          tabBarLabel: 'PlaceList', // 1. NOME MUDOU
-          headerTitle: 'Minhas PlaceLists', // Título da página
-          headerShown: true, // 2. MOSTRA O CABEÇALHO DA ABA
-          headerStyle: { backgroundColor: Colors.background },
-          headerTitleStyle: { color: Colors.text, fontWeight: 'bold' },
-          headerShadowVisible: false,
-          headerTintColor: Colors.text,
-          
-          // 3. BOTÃO '+' MOVIDO PARA CÁ
-          headerRight: () => (
-            <TouchableOpacity 
-              onPress={() => router.push('/criarLista')} 
-              style={{ marginRight: 15 }}
-            >
-              <FontAwesome5 name="plus" size={22} color={Colors.primary} />
-            </TouchableOpacity>
-          ),
-
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="list-alt" color={color} size={size * 0.9} />
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => { // 4. Listener de Reset (igual)
-            e.preventDefault();
-            router.push('/listas'); 
-          },
+          title: 'Listas',
+          // Esta chamada corresponde ao tipo FontAwesomeProps (isIonicons é indefinido)
+          tabBarIcon: ({ color }) => <TabBarIcon name="list-ul" color={color} />,
+          headerTitle: 'Minhas Listas', 
         }}
       />
       
-      {/* Aba Perfil (igual) */}
+      {/* Aba Perfil */}
       <Tabs.Screen
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="user" color={color} size={size * 0.9} solid />
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon 
+              name="person" 
+              color={color} 
+              isIonicons // Esta prop 'isIonicons: true' corresponde ao tipo IoniconsProps
+            />
           ),
         }}
       />
