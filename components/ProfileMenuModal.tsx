@@ -21,7 +21,6 @@ type Props = {
 const menuItems = [
   { key: 'avaliacoes', title: 'Minhas Avaliações' },
   { key: 'favoritos', title: 'Meus Favoritos' },
-  { key: 'listas', title: 'Minhas Listas' },
   { key: 'visitados', title: 'Locais Visitados' },
   { key: 'conquistas', title: 'Conquistas' },
   { key: 'configuracoes', title: 'Configurações' },
@@ -63,7 +62,6 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
                   Isso remove o erro do TypeScript */}
               {item.key === 'avaliacoes' && <FontAwesome name="star" size={22} color={Colors.primary} />}
               {item.key === 'favoritos' && <FontAwesome name="heart" size={22} color={Colors.primary} />}
-              {item.key === 'listas' && <FontAwesome name="list-ul" size={22} color={Colors.primary} />}
               {item.key === 'visitados' && <Ionicons name="location-sharp" size={22} color={Colors.primary} />}
               {item.key === 'conquistas' && <FontAwesome name="trophy" size={22} color={Colors.primary} />}
               {item.key === 'configuracoes' && <Ionicons name="settings-sharp" size={22} color={Colors.primary} />}

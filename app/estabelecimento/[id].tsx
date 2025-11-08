@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+// 1. IMPORTAR O 'Stack'
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,20 +14,21 @@ import {
   View,
 } from 'react-native';
 
+import AdicionarListaModal from '../../components/AdicionarListaModal';
 import AvaliacaoModal from '../../components/AvaliacaoModal';
 import Colors from '../../constants/Colors';
 import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window'); 
 
-// Define o "formato" do objeto estabelecimento
+// ... (Interface Estabelecimento)
 interface Estabelecimento {
-  id: string; // ou number
+  id: string; 
   nome: string;
   images: string[];
   posicao?: string;
-  media_notas?: number | string; // Aceita string ou número
-  rating?: number | string;      // Aceita string ou número
+  media_notas?: number | string; 
+  rating?: number | string;      
   endereco: string;
   telefone?: string;
   horario?: string;
@@ -41,6 +43,7 @@ export default function EstabelecimentoDetalheScreen() {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isListModalVisible, setListModalVisible] = useState(false);
 
   useEffect(() => {
     if (!id) return; 
@@ -61,12 +64,12 @@ export default function EstabelecimentoDetalheScreen() {
     fetchEstabelecimento();
   }, [id]); 
 
+  // ... (handleAvaliarSubmit)
   const handleAvaliarSubmit = async (nota: number, comentario: string) => {
     if (!estabelecimento) {
       Alert.alert('Erro', 'Dados do estabelecimento não carregados.');
       return;
     }
-
     setIsSubmitting(true);
     try {
       await api.post('/reviews', {
@@ -85,12 +88,14 @@ export default function EstabelecimentoDetalheScreen() {
   };
 
   const handleAddToList = () => {
-    Alert.alert('Adicionar', 'Funcionalidade de adicionar à lista ainda não implementada.');
+    setListModalVisible(true);
   };
 
   if (isLoading || !estabelecimento) {
     return (
       <View style={styles.loadingContainer}>
+        {/* 2. ADICIONAR UM CABEÇALHO DE 'CARREGANDO' */}
+        <Stack.Screen options={{ title: 'Carregando...' }} />
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
@@ -98,6 +103,17 @@ export default function EstabelecimentoDetalheScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* 3. ADICIONAR O CABEÇALHO DA TELA */}
+      {/* Isso força o header a aparecer (com 'Voltar') e define o título */}
+      <Stack.Screen
+        options={{
+          title: estabelecimento.nome, // Título dinâmico
+          headerStyle: { backgroundColor: Colors.background },
+          headerTitleStyle: { color: Colors.text },
+          headerTintColor: Colors.text, // Cor da seta "voltar"
+        }}
+      />
+      
       {/* --- CARROSSEL DE IMAGENS --- */}
       <View style={styles.carouselContainer}>
         <ScrollView
@@ -111,16 +127,14 @@ export default function EstabelecimentoDetalheScreen() {
             ))
           ) : (
              <Image 
-              source={{ uri: 'https_via_placeholder_com/400x300.png?text=Sem+Imagem' }} 
+              source={{ uri: 'https://placeholder.com/400x300.png?text=Sem+Imagem' }}
               style={styles.image} 
             />
           )}
         </ScrollView>
         <View style={styles.dotIndicator} />
 
-        <TouchableOpacity style={styles.overlayButtonLeft} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
+        {/* --- BOTÃO "SALVAR" MANTIDO --- */}
         <TouchableOpacity style={styles.overlayButtonRight}>
           <Ionicons name="bookmark-outline" size={24} color={Colors.white} />
         </TouchableOpacity>
@@ -131,18 +145,13 @@ export default function EstabelecimentoDetalheScreen() {
         <View style={styles.headerRow}>
           <Text style={styles.title}>{estabelecimento.nome}</Text>
           <Text style={styles.rating}>
-            
-            {/* --- CORREÇÃO AQUI --- */}
-            {/* Usamos parseFloat() para converter a string em número antes do .toFixed() */}
-           {/* DEPOIS (Correto) */}
-{(parseFloat(String(estabelecimento.media_notas || estabelecimento.rating || 0))).toFixed(1)}
-            {/* --------------------- */}
-
+           {(parseFloat(String(estabelecimento.media_notas || estabelecimento.rating || 0))).toFixed(1)}
             <Ionicons name="star" size={16} color={Colors.primary} />
           </Text>
         </View>
 
-        {/* --- ÍCONES DE AÇÃO --- */}
+        {/* ... (Resto do JSX e Modais) ... */}
+        {/* --- ÍCONES DE AÇÃO (Botões Laranja e Marrom) --- */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={styles.actionButtonAvaliar}
@@ -170,18 +179,23 @@ export default function EstabelecimentoDetalheScreen() {
         </View>
       </View>
 
-      {/* --- MODAL --- */}
+      {/* --- MODAIS --- */}
       <AvaliacaoModal
         visible={isModalVisible}
         onClose={() => setModalVisible(false)}
         onSubmit={handleAvaliarSubmit}
         isLoading={isSubmitting}
       />
+      <AdicionarListaModal
+        visible={isListModalVisible}
+        onClose={() => setListModalVisible(false)}
+        estabelecimentoId={estabelecimento.id}
+      />
     </ScrollView>
   );
 }
 
-// --- ESTILOS (Os mesmos de antes) ---
+// --- ESTILOS (Os mesmos da última resposta) ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -216,17 +230,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: Colors.background, 
   },
-  overlayButtonLeft: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    padding: 8,
-    borderRadius: 20,
-  },
   overlayButtonRight: {
     position: 'absolute',
-    top: 40,
+    top: 10, // Ajustado para não bater no cabeçalho
     right: 20,
     backgroundColor: 'rgba(0,0,0,0.4)',
     padding: 8,
@@ -273,7 +279,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: Colors.lightGrey,
   },
-  actionButtonAvaliar: {
+  actionButtonAvaliar: { 
     backgroundColor: Colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -281,7 +287,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  actionButtonAdd: {
+  actionButtonAdd: { 
     backgroundColor: Colors.text,
     paddingVertical: 12,
     paddingHorizontal: 20,

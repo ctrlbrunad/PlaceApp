@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router'; // 1. IMPORTAR O 'Stack'
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,12 +11,13 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // 2. IMPORTAR A 'SafeAreaView'
 import Colors from '../constants/Colors';
 import api from '../src/services/api';
 
 export default function CriarListaScreen() {
   const [nome, setNome] = useState('');
-  const [isPublica, setIsPublica] = useState(false); // Checkbox para "Pública"
+  const [isPublica, setIsPublica] = useState(false); 
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -28,16 +29,13 @@ export default function CriarListaScreen() {
 
     setIsLoading(true);
     try {
-      // Chama a API que JÁ TESTAMOS! (POST /listas)
       await api.post('/listas', {
         nome: nome,
         publica: isPublica,
-        estabelecimentos: [] // Começa vazia
+        estabelecimentos: [] 
       });
 
       setIsLoading(false);
-      
-      // Fecha o modal e volta para a tela anterior
       router.back();
 
     } catch (error) {
@@ -52,8 +50,18 @@ export default function CriarListaScreen() {
   };
 
   return (
-    // Usamos View normal, pois o modal já cuida da SafeArea
-    <View style={styles.container}>
+    // 3. USAR 'SafeAreaView' E ADICIONAR O 'Stack.Screen'
+    <SafeAreaView style={styles.container}>
+      {/* Configura o cabeçalho desta tela */}
+      <Stack.Screen 
+        options={{ 
+          title: 'Criar Nova Lista',
+          headerStyle: { backgroundColor: Colors.background },
+          headerTitleStyle: { color: Colors.text },
+          headerTintColor: Colors.text, // Cor da seta "voltar"
+        }} 
+      />
+      
       <View style={styles.form}>
         <Text style={styles.label}>Nome da Lista</Text>
         <TextInput
@@ -88,11 +96,11 @@ export default function CriarListaScreen() {
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
-// Estilos
+// Estilos (os mesmos do seu arquivo)
 const styles = StyleSheet.create({
   container: {
     flex: 1,

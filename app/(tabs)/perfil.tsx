@@ -1,12 +1,12 @@
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react'; // Importar o useState
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Colors from '../../constants/Colors';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 
-// 1. Importar o novo modal
+// Importar o modal do menu
 import ProfileMenuModal from '../../components/ProfileMenuModal';
 
 const colors = Colors;
@@ -15,8 +15,6 @@ export default function ProfileScreen() {
   const { user, logout, isLoading } = useAuth();
   const [stats, setStats] = useState({ reviews: 0, lists: 0 });
   const [isStatsLoading, setIsStatsLoading] = useState(true);
-
-  // 2. Adicionar estado para controlar o modal do menu
   const [isMenuVisible, setMenuVisible] = useState(false);
 
   useEffect(() => {
@@ -51,6 +49,7 @@ export default function ProfileScreen() {
 
   return (
     <>
+      {/* Configuração do Cabeçalho com o ícone de menu */}
       <Stack.Screen
         options={{
           title: 'Perfil',
@@ -58,21 +57,19 @@ export default function ProfileScreen() {
           headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
           headerShadowVisible: false,
           headerRight: () => (
-            // 3. MUDAR o ícone de 'log-out' para 'menu'
-            // e o onPress para abrir o modal
             <TouchableOpacity 
-              onPress={() => setMenuVisible(true)} // <- MUDANÇA
+              onPress={() => setMenuVisible(true)}
               style={{ marginRight: 16 }}
             >
-              <Feather name="menu" size={24} color={colors.text} /> {/* <- MUDANÇA */}
+              <Feather name="menu" size={24} color={colors.text} />
             </TouchableOpacity>
           ),
+          headerLeft: () => null, 
         }}
       />
-
+      
+      {/* Conteúdo da Tela */}
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* ... (Todo o seu <View style={styles.profileCard}>... </View> continua aqui) ... */}
-        
         <View style={styles.profileCard}>
           <TouchableOpacity style={styles.avatarContainer}>
             {user.imageUrl ? ( 
@@ -95,9 +92,8 @@ export default function ProfileScreen() {
               </Text>
               <Text style={styles.statLabel}>Avaliações</Text>
             </View>
-
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
-              <FontAwesome name="list-ul" size={24} color={colors.primary} />
+              <FontAwesome name="list-ul" size={24} color={Colors.primary} />
               <Text style={[styles.statNumber, { color: colors.text }]}>
                 {isStatsLoading ? '...' : stats.lists}
               </Text>
@@ -105,20 +101,19 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-            
       </ScrollView>
 
-      {/* 4. ADICIONAR o modal no final do JSX */}
+      {/* Modal do Menu (que contém o botão "Sair") */}
       <ProfileMenuModal
         visible={isMenuVisible}
         onClose={() => setMenuVisible(false)}
-        onLogout={logout} // Passa a função de logout para o modal
+        onLogout={logout} 
       />
     </>
   );
 }
 
-// --- Estilos (Os mesmos de antes) ---
+// --- Estilos ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -156,6 +151,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
+    borderColor: colors.primary, // Adicionando a borda aqui
   },
   userName: {
     fontSize: 24,
@@ -177,6 +173,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     width: '45%',
+    backgroundColor: `${Colors.primary}20`, // Adicionando o fundo
   },
   statNumber: {
     fontSize: 28,
