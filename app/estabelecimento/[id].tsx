@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-// 1. IMPORTAR O 'Stack'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -21,7 +20,7 @@ import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window'); 
 
-// ... (Interface Estabelecimento)
+// Interface para os dados DESTE estabelecimento
 interface Estabelecimento {
   id: string; 
   nome: string;
@@ -36,7 +35,7 @@ interface Estabelecimento {
 
 export default function EstabelecimentoDetalheScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); 
+  const { id } = useLocalSearchParams(); // Pega o 'estab7' da URL
   
   const [estabelecimento, setEstabelecimento] = useState<Estabelecimento | null>(null);
   const [isLoading, setIsLoading] = useState(true); 
@@ -45,13 +44,15 @@ export default function EstabelecimentoDetalheScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isListModalVisible, setListModalVisible] = useState(false);
 
+  // Busca os dados do estabelecimento específico
   useEffect(() => {
     if (!id) return; 
 
     const fetchEstabelecimento = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(`/estabelecimentos/${id}`);
+        // Usa o 'id' (estab7) para buscar na API
+        const response = await api.get(`/estabelecimentos/${id}`); 
         setEstabelecimento(response.data);
       } catch (error) {
         console.error("Erro ao buscar dados do estabelecimento:", error);
@@ -64,12 +65,9 @@ export default function EstabelecimentoDetalheScreen() {
     fetchEstabelecimento();
   }, [id]); 
 
-  // ... (handleAvaliarSubmit)
+  // Funções 'handle' (Avaliar, Adicionar à Lista)
   const handleAvaliarSubmit = async (nota: number, comentario: string) => {
-    if (!estabelecimento) {
-      Alert.alert('Erro', 'Dados do estabelecimento não carregados.');
-      return;
-    }
+    if (!estabelecimento) return;
     setIsSubmitting(true);
     try {
       await api.post('/reviews', {
@@ -91,30 +89,30 @@ export default function EstabelecimentoDetalheScreen() {
     setListModalVisible(true);
   };
 
+  // Tela de Loading
   if (isLoading || !estabelecimento) {
     return (
       <View style={styles.loadingContainer}>
-        {/* 2. ADICIONAR UM CABEÇALHO DE 'CARREGANDO' */}
         <Stack.Screen options={{ title: 'Carregando...' }} />
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
+  // A TELA DE DETALHES REAL
   return (
     <ScrollView style={styles.container}>
-      {/* 3. ADICIONAR O CABEÇALHO DA TELA */}
-      {/* Isso força o header a aparecer (com 'Voltar') e define o título */}
       <Stack.Screen
         options={{
-          title: estabelecimento.nome, // Título dinâmico
+          title: estabelecimento.nome,
           headerStyle: { backgroundColor: Colors.background },
           headerTitleStyle: { color: Colors.text },
-          headerTintColor: Colors.text, // Cor da seta "voltar"
+          headerTintColor: Colors.text, 
+          headerBackTitle: ' ', // Remove o "(tabs)"
         }}
       />
       
-      {/* --- CARROSSEL DE IMAGENS --- */}
+      {/* Carrossel de Imagens */}
       <View style={styles.carouselContainer}>
         <ScrollView
           horizontal
@@ -133,14 +131,12 @@ export default function EstabelecimentoDetalheScreen() {
           )}
         </ScrollView>
         <View style={styles.dotIndicator} />
-
-        {/* --- BOTÃO "SALVAR" MANTIDO --- */}
         <TouchableOpacity style={styles.overlayButtonRight}>
           <Ionicons name="bookmark-outline" size={24} color={Colors.white} />
         </TouchableOpacity>
       </View>
 
-      {/* --- CONTEÚDO PRINCIPAL --- */}
+      {/* Conteúdo (Nome, Nota, Botões) */}
       <View style={styles.infoContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>{estabelecimento.nome}</Text>
@@ -150,8 +146,6 @@ export default function EstabelecimentoDetalheScreen() {
           </Text>
         </View>
 
-        {/* ... (Resto do JSX e Modais) ... */}
-        {/* --- ÍCONES DE AÇÃO (Botões Laranja e Marrom) --- */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={styles.actionButtonAvaliar}
@@ -164,7 +158,7 @@ export default function EstabelecimentoDetalheScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* --- INFORMAÇÕES ADICIONAIS --- */}
+        {/* Informações (Endereço, etc) */}
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>Endereço:</Text>
           <Text style={styles.infoText}>{estabelecimento.endereco || 'Não informado'}</Text>
@@ -179,7 +173,7 @@ export default function EstabelecimentoDetalheScreen() {
         </View>
       </View>
 
-      {/* --- MODAIS --- */}
+      {/* Modais */}
       <AvaliacaoModal
         visible={isModalVisible}
         onClose={() => setModalVisible(false)}
@@ -195,7 +189,7 @@ export default function EstabelecimentoDetalheScreen() {
   );
 }
 
-// --- ESTILOS (Os mesmos da última resposta) ---
+// Estilos (Os mesmos que já tínhamos)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -232,7 +226,7 @@ const styles = StyleSheet.create({
   },
   overlayButtonRight: {
     position: 'absolute',
-    top: 10, // Ajustado para não bater no cabeçalho
+    top: 10,
     right: 20,
     backgroundColor: 'rgba(0,0,0,0.4)',
     padding: 8,

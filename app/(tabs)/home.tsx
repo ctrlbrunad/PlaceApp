@@ -1,202 +1,314 @@
-// app/(tabs)/home.tsx (VERSÃO COM TEXTO DA CATEGORIA CORRIGIDO)
-import { FontAwesome5 } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { Link, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
+  Alert,
+  FlatList, // (Ainda usado para Categorias)
   Image,
   Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
+
 import Colors from '../../constants/Colors';
 import api from '../../src/services/api';
 
-// Interfaces (iguais)
-interface Estabelecimento { id: string; nome: string; categoria: string; subcategoria: string; endereco: string; media_notas: string; total_avaliacoes: number; }
-interface Categoria { nome: string; iconName: React.ComponentProps<typeof FontAwesome5>['name']; }
+// Interface
+interface Estabelecimento {
+  id: string;
+  nome: string;
+  images?: string[];
+  media_notas: string; 
+}
 
-// Categorias (iguais)
-const CATEGORIAS_MVP: Categoria[] = [
-  { nome: 'Hamburgueria', iconName: 'hamburger' },
-  { nome: 'Pizzaria',     iconName: 'pizza-slice' },
-  { nome: 'Cafeteria',    iconName: 'coffee' },
-  { nome: 'Restaurante',  iconName: 'utensils' }, 
-  { nome: 'Sorveteria',   iconName: 'ice-cream' },
+interface Categoria {
+  key: string;
+  nome: string;
+  icon: React.ComponentProps<typeof FontAwesome5>['name'];
+  pack: 'FontAwesome5'; 
+}
+
+// Categorias (corretas)
+const categorias: Categoria[] = [
+  { key: 'hamburgueria', nome: 'Hamburgueria', icon: 'hamburger', pack: 'FontAwesome5' },
+  { key: 'pizzaria', nome: 'Pizzaria', icon: 'pizza-slice', pack: 'FontAwesome5' },
+  { key: 'cafeteria', nome: 'Cafeteria', icon: 'coffee', pack: 'FontAwesome5' },
+  { key: 'restaurante', nome: 'Restaurante', icon: 'utensils', pack: 'FontAwesome5' },
 ];
 
 export default function HomeScreen() {
-  const [categorias] = useState<Categoria[]>(CATEGORIAS_MVP);
   const [top3, setTop3] = useState<Estabelecimento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // useEffect (lógica de 1 chamada, igual)
   useEffect(() => {
-    const buscarDadosHome = async () => {
-      setIsLoading(true); setError(null);
+    const fetchTop3 = async () => {
       try {
-        const estabelecimentosResponse = await api.get<Estabelecimento[]>('/estabelecimentos');
-        const todosEstabelecimentos = estabelecimentosResponse.data;
+        setIsLoading(true);
+        const response = await api.get('/estabelecimentos');
+        const todosEstabelecimentos = response.data;
         const topGeral = [...todosEstabelecimentos]
           .sort((a, b) => parseFloat(b.media_notas) - parseFloat(a.media_notas))
           .slice(0, 3);
+        
         if (topGeral.length === 3) {
           setTop3([ topGeral[1], topGeral[0], topGeral[2] ]);
         } else {
           setTop3(topGeral);
         }
-      } catch (err) {
-        console.error("Erro ao buscar dados da Home:", err);
-        setError("Não foi possível carregar os dados. Verifique sua conexão ou tente novamente.");
+      } catch (error) {
+        console.error("Erro ao buscar Top 3:", error);
+        Alert.alert("Erro", "Não foi possível carregar o Top 3."); 
       } finally {
         setIsLoading(false);
       }
     };
-    buscarDadosHome();
+    fetchTop3();
   }, []);
 
-  // --- Funções de Navegação e Renderização (iguais) ---
+  // (A função 'renderTop3Item' foi removida, pois agora renderizamos "inline")
 
-  const handleCategoriaPress = (categoriaNome: string) => {
-    router.push(`/estabelecimentos?categoria=${categoriaNome}`);
-  };
-
+  // Renderiza Categorias (correto)
   const renderCategoriaItem = ({ item }: { item: Categoria }) => (
     <TouchableOpacity 
       style={styles.categoriaItem}
-      onPress={() => handleCategoriaPress(item.nome)}
+      onPress={() => router.push(`/estabelecimentos?categoria=${item.nome}`)}
     >
       <FontAwesome5
-        name={item.iconName}
+        name={item.icon}
         size={32}
-        color={Colors.text} // Marrom
+        color={Colors.text}
         style={{ marginBottom: 8 }}
       />
       <Text style={styles.categoriaTexto}>{item.nome}</Text>
     </TouchableOpacity>
   );
-  
-  // Renderização Principal (igual)
-  if (isLoading) { return ( <SafeAreaView style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.primary} /></SafeAreaView> ); }
-  
-  return ( 
+
+  return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        {/* Cabeçalho, Logo, Busca (iguais) */}
-        <View style={styles.header}><Text style={styles.cidade}>Cidade Exemplo</Text><Text style={styles.endereco}>Porto Velho, RO</Text></View>
-        <View style={styles.logoContainer}>
-           <Image source={require('../../assets/images/logo.png')} style={styles.logoImage} />
-           <Text style={styles.logoText}>Place</Text>
+        
+        {/* ... (Cabeçalho, Título, Slogan, Busca - tudo igual) ... */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerLocation}>Cidade Exemplo</Text>
+            <Text style={styles.headerCity}>Porto Velho, RO</Text>
+          </View>
+        </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.titleLogo}>Place</Text>
         </View>
         <Text style={styles.slogan}>Descubra os melhores sabores da cidade</Text>
-        <View style={styles.searchBarPlaceholder}></View>
         
-        {error ? (<View style={styles.errorContainer}><Text style={styles.errorText}>{error}</Text></View>) : (
-          <>
-            {/* Categorias (igual) */}
-            <Text style={styles.sectionTitle}>Categorias</Text>
-            <FlatList 
-              data={categorias} 
-              renderItem={renderCategoriaItem} 
-              keyExtractor={(item) => item.nome} 
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.categoriasList}
-              contentContainerStyle={{ paddingLeft: 10, paddingRight: 10 }}
-              ListEmptyComponent={<Text style={styles.emptyText}>Categorias não encontradas.</Text>} 
-            />
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color={Colors.grey} />
+          <TextInput 
+            placeholder="Buscar..." 
+            style={styles.searchInput}
+            placeholderTextColor={Colors.grey}
+          />
+        </View>
+        
+        <Text style={styles.sectionTitle}>Categorias</Text>
+        <FlatList 
+          data={categorias} 
+          renderItem={renderCategoriaItem} 
+          keyExtractor={(item) => item.key} 
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriasList}
+        />
 
-            {/* Top 3 (igual) */}
-            <Text style={styles.sectionTitle}>Top 3 da Semana</Text>
-            <View style={styles.top3Container}>
-              {top3.map((item, index) => {
-                const isPrimeiroLugar = index === 1; // O item do meio (1º lugar)
-                
-                return (
-                  <View key={item.id} style={styles.top3ItemContainer}>
-                    <View style={styles.top3ImagePlaceholder}></View>
-                    <View style={[
-                      styles.top3Bar,
-                      isPrimeiroLugar ? styles.top3BarPrimeiro : styles.top3BarOutros
-                    ]}>
-                      <FontAwesome5 
-                        name="award"
-                        size={32}
-                        color={isPrimeiroLugar ? Colors.text : Colors.primary}
-                      />
-                      <Text 
-                        style={[
-                          styles.top3Nome, 
-                          { color: isPrimeiroLugar ? Colors.text : Colors.white }
-                        ]}
-                        numberOfLines={2}
-                      >
-                        {item.nome}
-                      </Text>
+        <Text style={styles.sectionTitle}>Top 3 da Semana</Text>
+        {isLoading ? (
+          <ActivityIndicator size="large" color={Colors.primary} style={{ height: 200 }} />
+        ) : (
+          // --- CORREÇÃO AQUI ---
+          // Trocamos o <FlatList> por um <View> estático
+          <View style={styles.top3List}>
+            {top3.map((item, index) => {
+              // Lógica de estilo que estava no 'renderTop3Item'
+              const isPrimeiroLugar = index === 1; 
+              const cardStyle = isPrimeiroLugar ? styles.top3BarPrimeiro : styles.top3BarOutros;
+              const textStyle = isPrimeiroLugar ? styles.top3NomePrimeiro : styles.top3NomeOutros;
+              const iconColor = isPrimeiroLugar ? Colors.text : Colors.primary;
+              const imageUrl = (item.images && item.images.length > 0)
+                ? item.images[0]
+                : 'https://placeholder.com/100x100.png?text=Sem+Foto';
+
+              return (
+                <Link href={`/estabelecimento/${item.id}`} asChild key={item.id}>
+                  <TouchableOpacity style={cardStyle}>
+                    <View style={styles.top3Circle}>
+                      <Image source={{ uri: imageUrl }} style={styles.top3Image} />
                     </View>
-                  </View>
-                );
-              })}
-            </View>
-            {top3.length === 0 && !isLoading && (
-              <Text style={styles.emptyText}>Top 3 indisponível.</Text>
-            )}
-          </>
+                    <FontAwesome5
+                      name="award" // Medalha
+                      size={24}
+                      color={iconColor}
+                      style={{ marginTop: 10 }}
+                    />
+                    <Text style={textStyle} numberOfLines={2}>{item.nome}</Text>
+                  </TouchableOpacity>
+                </Link>
+              );
+            })}
+          </View>
         )}
       </ScrollView>
     </SafeAreaView> 
   );
 }
 
-// --- ESTILOS (AJUSTE NO BOTÃO E TEXTO DA CATEGORIA) ---
+// --- ESTILOS (Com Pódio Estático e Centralizado) ---
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
-  scrollContent: { paddingHorizontal: 15, paddingBottom: 30 },
+  scrollContent: { padding: 16, paddingBottom: 30 }, 
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
-  header: { marginTop: Platform.OS === 'android' ? 30 : 20, marginBottom: 15, alignItems: 'center' },
-  cidade: { fontSize: 16, fontWeight: '600', color: Colors.text },
-  endereco: { fontSize: 14, color: Colors.grey },
-  logoContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 5 },
-  logoImage: { width: 40, height: 40, resizeMode: 'contain', marginRight: 10 },
-  logoText: { fontSize: 36, fontWeight: 'bold', color: Colors.primary },
-  slogan: { fontSize: 16, color: Colors.text, textAlign: 'center', marginBottom: 25 },
-  searchBarPlaceholder: { height: 45, backgroundColor: Colors.searchBar, borderRadius: 25, marginBottom: 25, borderWidth: 0 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text, marginBottom: 15, marginLeft: 5 },
-  categoriasList: { marginBottom: 30 },
+  header: {
+    alignItems: 'flex-start', 
+  },
+  headerLocation: {
+    fontSize: 14,
+    color: Colors.grey,
+  },
+  headerCity: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.text,
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  titleLogo: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  slogan: { 
+    fontSize: 14, 
+    color: Colors.text, 
+    textAlign: 'center', 
+    marginBottom: 20 
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white, 
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    marginVertical: 20,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, },
+      android: { elevation: 2, },
+    }),
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: Colors.text,
+  },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: Colors.text, 
+    marginBottom: 15,
+  },
+  categoriasList: { 
+    marginBottom: 30 
+  },
   categoriaItem: { 
     backgroundColor: Colors.categoryBackground,
     paddingVertical: 15, 
-    paddingHorizontal: 5, // <-- Diminui o padding lateral
+    paddingHorizontal: 5, 
     borderRadius: 15, 
     marginRight: 10, 
     alignItems: 'center', 
     justifyContent: 'center', 
-    width: 95,  // <-- Aumentei um pouco a largura
-    height: 95, // <-- Aumentei um pouco a altura
+    width: 100,
+    height: 100,
   },
   categoriaTexto: { 
-    fontSize: 11, // <-- Diminuí um pouco a fonte
+    fontSize: 12, 
     color: Colors.text,
-    fontWeight: 'bold',
+    fontWeight: '500',
     marginTop: 5,
-    textAlign: 'center', // Garante centralização
+    textAlign: 'center', 
   },
-  top3Container: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 20, height: 240, gap: 15, paddingHorizontal: 10, justifyContent: 'center', },
-  top3ItemContainer: { alignItems: 'center', width: '30%', maxWidth: 110, },
-  top3ImagePlaceholder: { width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.lightGrey, marginBottom: -30, zIndex: 2, borderWidth: 3, borderColor: Colors.background, },
-  top3Bar: { borderRadius: 12, paddingTop: 40, paddingHorizontal: 10, paddingBottom: 10, alignItems: 'center', justifyContent: 'flex-start', width: '100%', ...Platform.select({ ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, }, android: { elevation: 3, }, }), },
-  top3BarPrimeiro: { height: 160, backgroundColor: Colors.primary, },
-  top3BarOutros: { height: 120, backgroundColor: Colors.text, },
-  top3Nome: { fontSize: 14, fontWeight: '600', textAlign: 'center', marginTop: 8, },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  errorText: { fontSize: 16, color: 'red', textAlign: 'center' },
-  emptyText: { fontSize: 14, color: Colors.grey, textAlign: 'center', marginTop: 20, marginBottom: 20 },
+  
+  // --- ESTILOS DO Top 3 CENTRALIZADOS ---
+  top3List: { 
+    height: 200,                // Altura para o pódio
+    flexDirection: 'row',       // Alinha os 3 cards lado a lado
+    justifyContent: 'center', // CENTRALIZA os cards na tela
+    alignItems: 'flex-end',     // Alinha na base (para o pódio)
+  },
+  top3BarPrimeiro: { 
+    height: 180, // Mais alto
+    width: 110,
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center', 
+    padding: 10,
+    marginHorizontal: 8,
+    ...Platform.select({ ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, }, android: { elevation: 3, }, }),
+  },
+  top3BarOutros: { 
+    height: 160, // Mais baixo
+    width: 110,
+    backgroundColor: Colors.text,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    marginHorizontal: 8,
+    ...Platform.select({ ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, }, android: { elevation: 3, }, }),
+  },
+  top3Circle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: Colors.lightGrey,
+    borderWidth: 3,
+    borderColor: Colors.white,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  top3Image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  top3NomePrimeiro: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    textAlign: 'center', 
+    marginTop: 8,
+    color: Colors.text, 
+  },
+  top3NomeOutros: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    textAlign: 'center', 
+    marginTop: 8,
+    color: Colors.white, 
+  },
+  emptyText: { 
+    fontSize: 14, 
+    color: Colors.grey, 
+    textAlign: 'center', 
+    marginTop: 20, 
+    marginBottom: 20 
+  },
 });

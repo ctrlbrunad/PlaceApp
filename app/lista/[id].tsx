@@ -1,4 +1,4 @@
-// app/lista/[id].tsx (VERSÃO COM CAMINHOS CORRIGIDOS)
+// app/lista/[id].tsx (VERSÃO CORRIGIDA COM FOTOS)
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
@@ -6,18 +6,27 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// --- CAMINHOS CORRIGIDOS (DOIS NÍVEIS ACIMA) ---
 import Colors from '../../constants/Colors';
 import api from '../../src/services/api';
 
-// Interfaces (iguais)
-interface Estabelecimento { id: string; nome: string; categoria: string; subcategoria: string; endereco: string; media_notas: string; total_avaliacoes: number; }
+// --- 2. ATUALIZE A INTERFACE ---
+interface Estabelecimento { 
+  id: string; 
+  nome: string; 
+  categoria: string; 
+  subcategoria: string; 
+  endereco: string; 
+  media_notas: string; 
+  total_avaliacoes: number; 
+  images?: string[]; // <-- Adicione este campo
+}
 interface ListaDetalhada {
   id: number;
   nome: string;
@@ -34,11 +43,11 @@ export default function ListaDetalheScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  // Função para buscar os dados (igual)
+  // ... (Sua lógica 'buscarDetalhesDaLista', 'handleDeletarLista', 'useLayoutEffect', 'handleRemoverEstabelecimento' 
+  //     permanece exatamente a mesma, pois já está correta.tsx])
   const buscarDetalhesDaLista = async () => { setIsLoading(true); try { const response = await api.get(`/listas/${id}`); setLista(response.data); } catch (error) { console.error("Erro...", error); Alert.alert("Erro", "Não..."); } finally { setIsLoading(false); } };
   useEffect(() => { if (id) { buscarDetalhesDaLista(); } }, [id]);
 
-  // Função Deletar Lista (com useCallback)
   const handleDeletarLista = useCallback(async () => {
     if (!lista) return;
     Alert.alert( "Deletar Lista", `Tem certeza... "${lista.nome}"?`, [
@@ -59,19 +68,17 @@ export default function ListaDetalheScreen() {
     ]);
   }, [lista, id, router]);
 
-  // Define o cabeçalho dinamicamente
   useLayoutEffect(() => {
     if (!lista) {
       navigation.setOptions({ title: isLoading ? 'Carregando...' : 'Erro' });
       return;
     }
     navigation.setOptions({
-      title: lista.nome, // Define o título da tela
+      title: lista.nome, 
      
     });
   }, [navigation, lista, isLoading, handleDeletarLista]);
 
-  // Função Remover Estabelecimento (com useCallback)
   const handleRemoverEstabelecimento = useCallback(async (estabelecimentoId: string) => { 
     try {
       await api.delete(`/listas/${id}/estabelecimentos/${estabelecimentoId}`);
@@ -88,24 +95,34 @@ export default function ListaDetalheScreen() {
     }
    }, [id]);
 
-  // renderEstabelecimentoItem (com useCallback)
-  const renderEstabelecimentoItem = useCallback(({ item }: { item: Estabelecimento }) => (
-    <View style={styles.itemContainer}>
-      <View style={styles.itemImagePlaceholder} />
-      <View style={styles.itemInfo}>
-        <Text style={styles.itemNome}>{item.nome}</Text>
-        <Text style={styles.itemDetalhes}>{item.subcategoria}</Text>
-      </View>
-      <TouchableOpacity 
-        style={styles.itemRemoveButton}
-        onPress={() => handleRemoverEstabelecimento(item.id)}
-      >
-        <FontAwesome5 name="times-circle" size={24} color={Colors.grey} />
-      </TouchableOpacity>
-    </View>
-  ), [handleRemoverEstabelecimento]);
+  // --- 3. ATUALIZE A FUNÇÃO 'renderEstabelecimentoItem' ---
+  const renderEstabelecimentoItem = useCallback(({ item }: { item: Estabelecimento }) => {
+    
+    // Pega a primeira imagem do array, ou usa um placeholder
+    const imageUrl = (item.images && item.images.length > 0)
+      ? item.images[0]
+      : 'https://placeholder.com/100x100.png?text=Sem+Foto';
 
-  // Lógica de Renderização (simplificada)
+    return (
+      <View style={styles.itemContainer}>
+        {/* Troca o <View> por <Image> */}
+        <Image source={{ uri: imageUrl }} style={styles.itemImage} />
+        
+        <View style={styles.itemInfo}>
+          <Text style={styles.itemNome}>{item.nome}</Text>
+          <Text style={styles.itemDetalhes}>{item.subcategoria}</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.itemRemoveButton}
+          onPress={() => handleRemoverEstabelecimento(item.id)}
+        >
+          <FontAwesome5 name="times-circle" size={24} color={Colors.grey} />
+        </TouchableOpacity>
+      </View>
+    );
+  }, [handleRemoverEstabelecimento]); //.tsx]
+
+  // ... (Sua lógica de renderização de Loading/Vazio permanece a mesma)
   if (isLoading) {
     return ( <SafeAreaView style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.primary} /></SafeAreaView> );
   }
@@ -134,7 +151,7 @@ export default function ListaDetalheScreen() {
   );
 }
 
-// --- CONSTANTE 'styles' ADICIONADA DE VOLTA ---
+// --- 4. ATUALIZE OS ESTILOS ---
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
@@ -142,7 +159,16 @@ const styles = StyleSheet.create({
   headerStatus: { fontSize: 14, color: Colors.grey },
   emptyText: { fontSize: 16, color: Colors.grey, textAlign: 'center', marginTop: 50 },
   itemContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, padding: 15, marginHorizontal: 15, marginVertical: 8, borderRadius: 12 },
-  itemImagePlaceholder: { width: 60, height: 60, borderRadius: 8, backgroundColor: Colors.lightGrey },
+  
+  // Renomeado 'itemImagePlaceholder' para 'itemImage'
+  itemImage: { 
+    width: 60, 
+    height: 60, 
+    borderRadius: 8, 
+    backgroundColor: Colors.lightGrey,
+    resizeMode: 'cover', // Adicionado
+  },
+
   itemInfo: { flex: 1, marginLeft: 15 },
   itemNome: { fontSize: 16, fontWeight: 'bold', color: Colors.text },
   itemDetalhes: { fontSize: 13, color: Colors.grey },

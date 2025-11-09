@@ -1,4 +1,6 @@
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
+// --- 1. IMPORTAR O 'useRouter' ---
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   Modal,
@@ -17,7 +19,7 @@ type Props = {
   onLogout: () => void;
 };
 
-// A lista de itens (baseada no seu protótipo)
+// A lista de itens (correta, como no seu arquivo)
 const menuItems = [
   { key: 'avaliacoes', title: 'Minhas Avaliações' },
   { key: 'favoritos', title: 'Meus Favoritos' },
@@ -28,9 +30,20 @@ const menuItems = [
 
 export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) {
   
+  // --- 2. INICIAR O 'router' ---
+  const router = useRouter();
+  
+  // --- 3. ATUALIZAR A FUNÇÃO 'handleMenuItemPress' ---
   const handleMenuItemPress = (key: string) => {
-    onClose(); 
-    alert(`Opção "${key}" clicada. Navegação não implementada.`);
+    onClose(); // Fecha o modal
+    
+    if (key === 'avaliacoes') {
+      // Navega para a nova tela que criamos
+      router.push('/minhas-avaliacoes');
+    } else {
+      // Mantém o alerta para os outros botões
+      alert(`Opção "${key}" clicada. Navegação não implementada.`);
+    }
   };
 
   return (
@@ -57,22 +70,19 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
               onPress={() => handleMenuItemPress(item.key)}
             >
               
-              {/* --- CORREÇÃO AQUI --- */}
-              {/* Renderiza o ícone específico para cada chave.
-                  Isso remove o erro do TypeScript */}
+              {/* Ícones (corretos, como no seu arquivo) */}
               {item.key === 'avaliacoes' && <FontAwesome name="star" size={22} color={Colors.primary} />}
               {item.key === 'favoritos' && <FontAwesome name="heart" size={22} color={Colors.primary} />}
               {item.key === 'visitados' && <Ionicons name="location-sharp" size={22} color={Colors.primary} />}
               {item.key === 'conquistas' && <FontAwesome name="trophy" size={22} color={Colors.primary} />}
               {item.key === 'configuracoes' && <Ionicons name="settings-sharp" size={22} color={Colors.primary} />}
-              {/* ------------------------- */}
               
               <Text style={styles.menuButtonText}>{item.title}</Text>
               <Feather name="chevron-right" size={22} color={Colors.grey} />
             </TouchableOpacity>
           ))}
           
-          {/* --- Botão de Sair (Logout) --- */}
+          {/* Botão Sair (correto) */}
           <TouchableOpacity 
             style={[styles.menuButton, styles.logoutButton]}
             onPress={() => {
@@ -89,7 +99,7 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
   );
 }
 
-// --- Estilos (Os mesmos de antes) ---
+// Estilos (os mesmos do seu arquivo)
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
