@@ -1,42 +1,34 @@
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+// --- 1. IMPORTAR 'useRouter' ---
+import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
 import Colors from '../../constants/Colors';
 
-// --- ESTA É A FUNÇÃO CORRIGIDA ---
-// Esta definição de tipo é mais avançada e diz ao TypeScript
-// que se 'isIonicons' for true, 'name' DEVE ser um ícone do Ionicons,
-// e se for false (ou não existir), 'name' DEVE ser um ícone do FontAwesome.
-// Isso resolve o erro "Type 'string' is not assignable..."
-
-// 1. Define os tipos de props separadamente
+// ... (Sua função TabBarIcon está aqui, ela está correta)
 type FontAwesomeProps = {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
-  isIonicons?: false; // 'isIonicons' é falso ou indefinido
+  isIonicons?: false;
 }
 type IoniconsProps = {
   name: React.ComponentProps<typeof Ionicons>['name'];
   color: string;
-  isIonicons: true; // 'isIonicons' é verdadeiro
+  isIonicons: true;
 }
-
-// 2. O tipo final do nosso componente é uma união dos dois
 type TabBarIconProps = FontAwesomeProps | IoniconsProps;
 
-// 3. A função agora usa os tipos corretos
 function TabBarIcon(props: TabBarIconProps) {
   if (props.isIonicons) {
-    // Se 'isIonicons' é true, TypeScript agora SABE que 'props.name' é um nome de Ionicons.
     return <Ionicons size={28} style={{ marginBottom: -3 }} name={props.name} color={props.color} />;
   }
-  // Se 'isIonicons' é false, TypeScript agora SABE que 'props.name' é um nome de FontAwesome.
   return <FontAwesome size={24} style={{ marginBottom: -3 }} name={props.name} color={props.color} />;
 }
 // ------------------------------------------
 
 export default function TabLayout() {
   const colors = Colors;
+  // --- 2. INICIAR O 'router' ---
+  const router = useRouter();
 
   return (
     <Tabs
@@ -46,7 +38,8 @@ export default function TabLayout() {
         tabBarStyle: { 
           backgroundColor: colors.white, 
         },
-        headerShown: true, // Importante para o menu do perfil
+        headerShown: true, 
+        //
       }}>
       
       {/* Aba Home */}
@@ -68,10 +61,20 @@ export default function TabLayout() {
             <TabBarIcon 
               name="storefront-outline" 
               color={color} 
-              isIonicons // Esta prop 'isIonicons: true' agora corresponde ao tipo IoniconsProps
+              isIonicons
             />
           ),
           headerShown: false,
+        }}
+        // --- 3. ADICIONAR ESTE 'listener' ---
+        // Isso intercepta o clique no ícone da aba
+        listeners={{
+          tabPress: (e) => {
+            // Previne a ação padrão (apenas reexibir a tela)
+            e.preventDefault(); 
+            // Força a navegação para a raiz da aba, limpando o filtro
+            router.replace('/(tabs)/estabelecimentos'); 
+          },
         }}
       />
       
@@ -80,7 +83,6 @@ export default function TabLayout() {
         name="listas"
         options={{
           title: 'Listas',
-          // Esta chamada corresponde ao tipo FontAwesomeProps (isIonicons é indefinido)
           tabBarIcon: ({ color }) => <TabBarIcon name="list-ul" color={color} />,
           headerTitle: 'Minhas Listas', 
         }}
@@ -95,7 +97,7 @@ export default function TabLayout() {
             <TabBarIcon 
               name="person" 
               color={color} 
-              isIonicons // Esta prop 'isIonicons: true' corresponde ao tipo IoniconsProps
+              isIonicons
             />
           ),
         }}

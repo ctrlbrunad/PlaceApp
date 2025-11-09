@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList, // (Ainda usado para Categorias)
+  FlatList,
   Image,
   Platform,
   SafeAreaView,
@@ -46,6 +46,7 @@ export default function HomeScreen() {
   const [top3, setTop3] = useState<Estabelecimento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const fetchTop3 = async () => {
@@ -71,10 +72,48 @@ export default function HomeScreen() {
     };
     fetchTop3();
   }, []);
+  
+  const handleSearchSubmit = () => {
+    if (searchText.trim() === '') {
+      return; 
+    }
+    router.push(`/estabelecimentos?search=${searchText}`);
+    setSearchText(''); 
+  };
 
-  // (A função 'renderTop3Item' foi removida, pois agora renderizamos "inline")
+  // Renderiza o Top 3 (com pódio e medalha)
+  const renderTop3Item = ({ item, index }: { item: Estabelecimento; index: number }) => {
+    
+    const isPrimeiroLugar = index === 1; 
+    const cardStyle = isPrimeiroLugar ? styles.top3BarPrimeiro : styles.top3BarOutros;
+    const textStyle = isPrimeiroLugar ? styles.top3NomePrimeiro : styles.top3NomeOutros;
+    const iconColor = isPrimeiroLugar ? Colors.text : Colors.primary;
+    
+    const imageUrl = (item.images && item.images.length > 0)
+      ? item.images[0]
+      : 'https://placeholder.com/100x100.png?text=Sem+Foto';
 
-  // Renderiza Categorias (correto)
+    return (
+      // --- CORREÇÃO AQUI ---
+      // Adicionamos a 'key' única ao item de nível superior da lista
+      <Link href={`/estabelecimento/${item.id}`} asChild key={item.id}>
+        <TouchableOpacity style={cardStyle}>
+          <View style={styles.top3Circle}>
+            <Image source={{ uri: imageUrl }} style={styles.top3Image} />
+          </View>
+          <FontAwesome5
+            name="award" 
+            size={24}
+            color={iconColor}
+            style={{ marginTop: 10 }}
+          />
+          <Text style={textStyle} numberOfLines={2}>{item.nome}</Text>
+        </TouchableOpacity>
+      </Link>
+    );
+  };
+
+  // Renderiza Categorias
   const renderCategoriaItem = ({ item }: { item: Categoria }) => (
     <TouchableOpacity 
       style={styles.categoriaItem}
@@ -94,7 +133,6 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         
-        {/* ... (Cabeçalho, Título, Slogan, Busca - tudo igual) ... */}
         <View style={styles.header}>
           <View>
             <Text style={styles.headerLocation}>Cidade Exemplo</Text>
@@ -112,6 +150,10 @@ export default function HomeScreen() {
             placeholder="Buscar..." 
             style={styles.searchInput}
             placeholderTextColor={Colors.grey}
+            value={searchText}
+            onChangeText={setSearchText}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
           />
         </View>
         
@@ -129,36 +171,8 @@ export default function HomeScreen() {
         {isLoading ? (
           <ActivityIndicator size="large" color={Colors.primary} style={{ height: 200 }} />
         ) : (
-          // --- CORREÇÃO AQUI ---
-          // Trocamos o <FlatList> por um <View> estático
           <View style={styles.top3List}>
-            {top3.map((item, index) => {
-              // Lógica de estilo que estava no 'renderTop3Item'
-              const isPrimeiroLugar = index === 1; 
-              const cardStyle = isPrimeiroLugar ? styles.top3BarPrimeiro : styles.top3BarOutros;
-              const textStyle = isPrimeiroLugar ? styles.top3NomePrimeiro : styles.top3NomeOutros;
-              const iconColor = isPrimeiroLugar ? Colors.text : Colors.primary;
-              const imageUrl = (item.images && item.images.length > 0)
-                ? item.images[0]
-                : 'https://placeholder.com/100x100.png?text=Sem+Foto';
-
-              return (
-                <Link href={`/estabelecimento/${item.id}`} asChild key={item.id}>
-                  <TouchableOpacity style={cardStyle}>
-                    <View style={styles.top3Circle}>
-                      <Image source={{ uri: imageUrl }} style={styles.top3Image} />
-                    </View>
-                    <FontAwesome5
-                      name="award" // Medalha
-                      size={24}
-                      color={iconColor}
-                      style={{ marginTop: 10 }}
-                    />
-                    <Text style={textStyle} numberOfLines={2}>{item.nome}</Text>
-                  </TouchableOpacity>
-                </Link>
-              );
-            })}
+            {top3.map((item, index) => renderTop3Item({ item, index }))}
           </View>
         )}
       </ScrollView>
@@ -166,7 +180,7 @@ export default function HomeScreen() {
   );
 }
 
-// --- ESTILOS (Com Pódio Estático e Centralizado) ---
+// --- ESTILOS (Os mesmos da versão "Pódio Estático") ---
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
@@ -246,15 +260,14 @@ const styles = StyleSheet.create({
     textAlign: 'center', 
   },
   
-  // --- ESTILOS DO Top 3 CENTRALIZADOS ---
   top3List: { 
-    height: 200,                // Altura para o pódio
-    flexDirection: 'row',       // Alinha os 3 cards lado a lado
-    justifyContent: 'center', // CENTRALIZA os cards na tela
-    alignItems: 'flex-end',     // Alinha na base (para o pódio)
+    height: 200,                
+    flexDirection: 'row',       
+    justifyContent: 'center', 
+    alignItems: 'flex-end',     
   },
   top3BarPrimeiro: { 
-    height: 180, // Mais alto
+    height: 180, 
     width: 110,
     backgroundColor: Colors.primary,
     borderRadius: 12,
@@ -265,7 +278,7 @@ const styles = StyleSheet.create({
     ...Platform.select({ ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, }, android: { elevation: 3, }, }),
   },
   top3BarOutros: { 
-    height: 160, // Mais baixo
+    height: 160, 
     width: 110,
     backgroundColor: Colors.text,
     borderRadius: 12,
