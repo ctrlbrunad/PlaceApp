@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import {
-    Modal,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  KeyboardAvoidingView,
+  Modal,
+  Platform, // 1. IMPORTAR 'Platform'
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
-// import { AirbnbRating } from 'react-native-ratings'; // <-- REMOVIDO
 import Colors from '../constants/Colors';
 
-// Props continuam as mesmas
+// Props (igual)
 type Props = {
   visible: boolean;
   onClose: () => void;
@@ -21,13 +21,10 @@ type Props = {
 };
 
 export default function AvaliacaoModal({ visible, onClose, onSubmit, isLoading }: Props) {
-  // 1. Alterado o estado inicial da nota para 0 (ou null)
-  // para que nenhum número comece selecionado.
   const [nota, setNota] = useState<number | null>(null); 
   const [comentario, setComentario] = useState('');
 
   const handleSubmit = () => {
-    // 2. Adicionado um check para garantir que uma nota foi selecionada
     if (!nota) {
       alert('Por favor, selecione uma nota de 1 a 5.');
       return;
@@ -37,7 +34,6 @@ export default function AvaliacaoModal({ visible, onClose, onSubmit, isLoading }
     }
   };
 
-  // Helper para resetar o estado quando o modal é fechado
   const handleClose = () => {
     setNota(null);
     setComentario('');
@@ -51,81 +47,92 @@ export default function AvaliacaoModal({ visible, onClose, onSubmit, isLoading }
       animationType="fade"
       onRequestClose={handleClose}>
       
-      <TouchableWithoutFeedback onPress={handleClose}>
-        <View style={styles.modalOverlay} />
-      </TouchableWithoutFeedback>
+      {/* 3. Envolver TUDO com o KeyboardAvoidingView */}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingContainer}
+      >
+        {/* Fundo clicável para fechar */}
+        <TouchableWithoutFeedback onPress={handleClose}>
+          {/* O overlay agora é absoluto para cobrir o fundo */}
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
 
-      <View style={styles.modalContent}>
-        <Text style={styles.modalTitle}>Qual sua avaliação?</Text>
+        {/* O conteúdo do modal (não é mais 'absolute') */}
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Qual sua avaliação?</Text>
 
-        {/* --- 3. SELETOR DE NÚMEROS (Substituiu o AirbnbRating) --- */}
-        <View style={styles.ratingContainer}>
-          {[1, 2, 3, 4, 5].map((numero) => (
-            <TouchableOpacity
-              key={numero}
-              // Aplica o estilo 'selecionado' se a nota for igual ao número
-              style={[
-                styles.ratingButton,
-                nota === numero && styles.ratingButtonSelected
-              ]}
-              // Atualiza o estado 'nota' ao ser pressionado
-              onPress={() => setNota(numero)} 
-            >
-              <Text
+          {/* Seletor de Números (igual) */}
+          <View style={styles.ratingContainer}>
+            {[1, 2, 3, 4, 5].map((numero) => (
+              <TouchableOpacity
+                key={numero}
                 style={[
-                  styles.ratingText,
-                  nota === numero && styles.ratingTextSelected
+                  styles.ratingButton,
+                  nota === numero && styles.ratingButtonSelected
                 ]}
+                onPress={() => setNota(numero)} 
               >
-                {numero}
+                <Text
+                  style={[
+                    styles.ratingText,
+                    nota === numero && styles.ratingTextSelected
+                  ]}
+                >
+                  {numero}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Campo de Texto (igual) */}
+          <TextInput
+            style={styles.textInput}
+            placeholder="Escreva um comentário (opcional)"
+            placeholderTextColor={Colors.grey}
+            multiline
+            numberOfLines={4}
+            value={comentario}
+            onChangeText={setComentario}
+          />
+
+          {/* Botões (igual) */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              onPress={handleClose}>
+              <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.submitButton]}
+              onPress={handleSubmit}
+              disabled={isLoading || !nota}>
+              <Text style={styles.buttonText}>
+                {isLoading ? 'Enviando...' : 'Enviar'}
               </Text>
             </TouchableOpacity>
-          ))}
+          </View>
         </View>
-        {/* -------------------------------------------------------- */}
-
-        <TextInput
-          style={styles.textInput}
-          placeholder="Escreva um comentário (opcional)"
-          placeholderTextColor={Colors.grey}
-          multiline
-          numberOfLines={4}
-          value={comentario}
-          onChangeText={setComentario}
-        />
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
-            onPress={handleClose}>
-            <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.submitButton]}
-            onPress={handleSubmit}
-            disabled={isLoading || !nota}>
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Enviando...' : 'Enviar'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
-// --- Estilos ---
+// --- 4. ATUALIZAR OS ESTILOS ---
 const styles = StyleSheet.create({
-  modalOverlay: {
+  // Este é o novo container principal
+  keyboardAvoidingContainer: {
     flex: 1,
+    justifyContent: 'flex-end', // Empurra o 'modalContent' para baixo
+  },
+  modalOverlay: {
+    // Cobre todo o fundo e é clicável
+    ...StyleSheet.absoluteFillObject, 
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    // Não é mais 'position: absolute'
+    // O KeyboardAvoidingView vai gerenciá-lo
     backgroundColor: Colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -142,8 +149,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  
-  // --- 4. NOVOS ESTILOS (para os botões de número) ---
   ratingContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -160,19 +165,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.lightGrey,
   },
   ratingButtonSelected: {
-    backgroundColor: Colors.primary, // Laranja
+    backgroundColor: Colors.primary, 
     borderColor: Colors.primary,
   },
   ratingText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.text, // Marrom
+    color: Colors.text, 
   },
   ratingTextSelected: {
-    color: Colors.white, // Branco
+    color: Colors.white, 
   },
-  // ----------------------------------------------------
-
   textInput: {
     height: 100,
     backgroundColor: Colors.lightGrey,
