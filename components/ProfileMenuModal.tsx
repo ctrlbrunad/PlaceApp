@@ -1,5 +1,4 @@
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
-// --- 1. IMPORTAR O 'useRouter' ---
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
@@ -30,16 +29,18 @@ const menuItems = [
 
 export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) {
   
-  // --- 2. INICIAR O 'router' ---
   const router = useRouter();
   
-  // --- 3. ATUALIZAR A FUNÇÃO 'handleMenuItemPress' ---
+  // --- ATUALIZAÇÃO AQUI ---
   const handleMenuItemPress = (key: string) => {
     onClose(); // Fecha o modal
     
     if (key === 'avaliacoes') {
-      // Navega para a nova tela que criamos
+      // Navega para a tela de avaliações
       router.push('/minhas-avaliacoes');
+    } else if (key === 'favoritos') {
+      // Navega para a nova tela de favoritos
+      router.push('/meus-favoritos');
     } else {
       // Mantém o alerta para os outros botões
       alert(`Opção "${key}" clicada. Navegação não implementada.`);

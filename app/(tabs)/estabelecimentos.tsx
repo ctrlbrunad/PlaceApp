@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons'; // --- 1. IMPORTAR Ionicons ---
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -29,19 +30,19 @@ export default function EstabelecimentosScreen() {
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // 1. LEIA O NOVO PARÂMETRO 'search'
-  const { categoria, search } = useLocalSearchParams<{ categoria: string, search: string }>();
+  // --- 2. CRIAR ESTADO PARA OS FAVORITOS ---
+  // Usamos um 'Set' para performance de busca (ex: favoritos.has('estab123'))
+  const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
   
-  // 2. ATUALIZE O TÍTULO
+  const { categoria, search } = useLocalSearchParams<{ categoria: string, search: string }>();
   const tituloDaTela = categoria || (search ? `Busca por "${search}"` : "Estabelecimentos");
 
-  // 3. ATUALIZE O useEffect
+  // --- 3. ATUALIZAR O useEffect PARA BUSCAR FAVORITOS TAMBÉM ---
   useEffect(() => {
-    const buscarEstabelecimentos = async () => { 
+    const buscarDados = async () => { 
       setIsLoading(true); 
       
-      // Constrói o endpoint dinamicamente
-      let endpoint = '/estabelecimentos'; // Rota base
+      let endpoint = '/estabelecimentos'; 
       if (categoria) {
         endpoint = `/estabelecimentos/top10/${categoria}`;
       } else if (search) {
@@ -49,8 +50,15 @@ export default function EstabelecimentosScreen() {
       }
       
       try { 
-        const response = await api.get<Estabelecimento[]>(endpoint); 
-        setEstabelecimentos(response.data); 
+        // Busca os estabelecimentos E os IDs de favoritos em paralelo
+        const [estabResponse, favIdsResponse] = await Promise.all([
+          api.get<Estabelecimento[]>(endpoint),
+          api.get<string[]>('/favoritos/me/ids') // Nova rota do backend
+        ]);
+        
+        setEstabelecimentos(estabResponse.data);
+        setFavoritos(new Set(favIdsResponse.data)); // Salva os IDs no estado
+
       } catch (error) { 
         console.error(`Erro...`, error); 
         Alert.alert("Erro", "Não foi..."); 
@@ -58,34 +66,73 @@ export default function EstabelecimentosScreen() {
         setIsLoading(false); 
       } 
     };
-    buscarEstabelecimentos();
-  }, [categoria, search]); // 4. ADICIONE 'search' ÀS DEPENDÊNCIAS
+    buscarDados();
+  }, [categoria, search]);
 
-  // renderItem (com as imagens)
+  // --- 4. ADICIONAR A FUNÇÃO DE TOGGLE (LIGAR/DESLIGAR) ---
+  const handleToggleFavorito = async (estabelecimentoId: string) => {
+    // Atualização Otimista: muda o ícone ANTES da resposta da API
+    const novosFavoritos = new Set(favoritos);
+    if (novosFavoritos.has(estabelecimentoId)) {
+      novosFavoritos.delete(estabelecimentoId);
+    } else {
+      novosFavoritos.add(estabelecimentoId);
+    }
+    setFavoritos(novosFavoritos);
+
+    // Envia a requisição real para a API (toggle)
+    try {
+      await api.post(`/favoritos/${estabelecimentoId}`);
+    } catch (error) {
+      console.error("Erro ao favoritar:", error);
+      // Se a API falhar, reverte a mudança visual
+      setFavoritos(new Set(favoritos)); 
+    }
+  };
+
+  // --- 5. ATUALIZAR O renderItem PARA USAR O CORAÇÃO ---
   const renderItem = ({ item }: { item: Estabelecimento }) => {
     const imageUrl = (item.images && item.images.length > 0)
       ? item.images[0]
       : 'https://placeholder.com/100x100.png?text=Sem+Foto';
       
+    // Verifica se o item atual está no Set de favoritos
+    const isFavorited = favoritos.has(item.id);
+      
     return (
-      <Link 
-        href={{
-          pathname: "/estabelecimento/[id]",
-          params: { id: item.id }
-        }} 
-        asChild
-      >
-        <TouchableOpacity style={styles.itemContainer}>
-          <Image source={{ uri: imageUrl }} style={styles.itemImage} />
-          <View style={styles.itemInfo}>
-            <Text style={styles.itemNome}>{item.nome}</Text>
-            <Text style={styles.itemDetalhes}>
-              {parseFloat(String(item.media_notas || 0)).toFixed(1)} ★ ({item.total_avaliacoes}) - {item.subcategoria}
-            </Text>
-          </View>
-          <View style={styles.itemSalvarPlaceholder} />
+      // O container principal não é mais um Link
+      <View style={styles.itemContainer}>
+        {/* O Link agora envolve apenas a parte da informação */}
+        <Link 
+          href={{
+            pathname: "/estabelecimento/[id]",
+            params: { id: item.id }
+          }} 
+          asChild
+        >
+          <TouchableOpacity style={styles.itemLink}>
+            <Image source={{ uri: imageUrl }} style={styles.itemImage} />
+            <View style={styles.itemInfo}>
+              <Text style={styles.itemNome}>{item.nome}</Text>
+              <Text style={styles.itemDetalhes}>
+                {parseFloat(String(item.media_notas || 0)).toFixed(1)} ★ ({item.total_avaliacoes}) - {item.subcategoria}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </Link>
+
+        {/* O placeholder foi substituído pelo botão de coração */}
+        <TouchableOpacity 
+          style={styles.itemSalvarButton}
+          onPress={() => handleToggleFavorito(item.id)}
+        >
+          <Ionicons 
+            name={isFavorited ? "heart" : "heart-outline"} 
+            size={24} 
+            color={isFavorited ? Colors.primary : Colors.grey} 
+          />
         </TouchableOpacity>
-      </Link>
+      </View>
     );
   };
 
@@ -116,7 +163,6 @@ export default function EstabelecimentosScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
-              {/* Mensagem de "nenhum resultado" atualizada */}
               {categoria ? `Nenhum estabelecimento encontrado para "${categoria}".` 
                : search ? `Nenhum resultado para "${search}".`
                : "Nenhum estabelecimento encontrado."}
@@ -128,7 +174,7 @@ export default function EstabelecimentosScreen() {
   );
 }
 
-// Estilos (Os mesmos de antes)
+// --- 6. ATUALIZAR OS ESTILOS ---
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
@@ -136,6 +182,15 @@ const styles = StyleSheet.create({
   emptyContainer: { flex: 1, padding: 20, marginTop: 50, alignItems: 'center' },
   emptyText: { fontSize: 16, color: Colors.grey, textAlign: 'center' },
   itemContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, padding: 15, marginHorizontal: 15, marginVertical: 8, borderRadius: 12, ...Platform.select({ ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, }, android: { elevation: 2, }, }), },
+  
+  // Novo estilo para o 'Link' (imagem + texto)
+  itemLink: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10, // Adiciona margem para não colar no coração
+  },
+
   itemImage: { 
     width: 60, 
     height: 60, 
@@ -146,5 +201,10 @@ const styles = StyleSheet.create({
   itemInfo: { flex: 1, marginLeft: 15 },
   itemNome: { fontSize: 16, fontWeight: 'bold', color: Colors.text, marginBottom: 4 },
   itemDetalhes: { fontSize: 13, color: Colors.grey },
-  itemSalvarPlaceholder: { width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.primary, opacity: 0.2 },
+  
+  // Novo estilo para o botão de coração
+  itemSalvarButton: { 
+    padding: 5, // Aumenta a área de clique
+  },
+  // (itemSalvarPlaceholder foi removido)
 });

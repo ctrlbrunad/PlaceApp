@@ -82,9 +82,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="listas"
         options={{
-          title: 'Listas',
-          tabBarIcon: ({ color }) => <TabBarIcon name="list-ul" color={color} />,
-          headerTitle: 'Minhas Listas', 
+          title: 'Placelists',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list-ul" color={ color } />,
+          headerTitle: 'Minhas Placelists', 
+    
         }}
       />
       
