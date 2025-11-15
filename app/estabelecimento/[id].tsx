@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -20,7 +20,7 @@ import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window'); 
 
-// Interface para os dados DESTE estabelecimento
+// Interface do Estabelecimento
 interface Estabelecimento {
   id: string; 
   nome: string;
@@ -33,39 +33,57 @@ interface Estabelecimento {
   horario?: string;
 }
 
+// --- 1. NOVA INTERFACE PARA A REVIEW ---
+interface Review {
+  id: string | number;
+  usuario_nome: string;
+  nota: number;
+  comentario: string;
+  data: string;
+}
+
 export default function EstabelecimentoDetalheScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // Pega o 'estab7' da URL
+  const { id } = useLocalSearchParams(); 
   
   const [estabelecimento, setEstabelecimento] = useState<Estabelecimento | null>(null);
+  
+  // --- 2. NOVO ESTADO PARA AS REVIEWS ---
+  const [reviews, setReviews] = useState<Review[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true); 
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isListModalVisible, setListModalVisible] = useState(false);
 
-  // Busca os dados do estabelecimento específico
   useEffect(() => {
     if (!id) return; 
 
-    const fetchEstabelecimento = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Usa o 'id' (estab7) para buscar na API
-        const response = await api.get(`/estabelecimentos/${id}`); 
-        setEstabelecimento(response.data);
+        
+        // --- 3. BUSCAR OS DADOS DO LOCAL E AS REVIEWS AO MESMO TEMPO ---
+        const [estabRes, reviewsRes] = await Promise.all([
+          api.get(`/estabelecimentos/${id}`),
+          api.get(`/reviews/${id}`)
+        ]);
+
+        setEstabelecimento(estabRes.data);
+        setReviews(reviewsRes.data.data); // O backend retorna { data: [...] }
+
       } catch (error) {
-        console.error("Erro ao buscar dados do estabelecimento:", error);
-        Alert.alert("Erro", "Não foi possível carregar os dados do local.");
+        console.error("Erro ao buscar dados:", error);
+        Alert.alert("Erro", "Não foi possível carregar as informações.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchEstabelecimento();
+    fetchData();
   }, [id]); 
 
-  // Funções 'handle' (Avaliar, Adicionar à Lista)
   const handleAvaliarSubmit = async (nota: number, comentario: string) => {
     if (!estabelecimento) return;
     setIsSubmitting(true);
@@ -77,6 +95,10 @@ export default function EstabelecimentoDetalheScreen() {
       });
       Alert.alert('Sucesso!', 'Sua avaliação foi enviada.');
       setModalVisible(false);
+      
+      // (Opcional: Recarregar a página para ver a nova avaliação)
+      // fetchData(); 
+      
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Não foi possível enviar sua avaliação.');
@@ -89,7 +111,6 @@ export default function EstabelecimentoDetalheScreen() {
     setListModalVisible(true);
   };
 
-  // Tela de Loading
   if (isLoading || !estabelecimento) {
     return (
       <View style={styles.loadingContainer}>
@@ -99,7 +120,6 @@ export default function EstabelecimentoDetalheScreen() {
     );
   }
 
-  // A TELA DE DETALHES REAL
   return (
     <ScrollView style={styles.container}>
       <Stack.Screen
@@ -108,17 +128,13 @@ export default function EstabelecimentoDetalheScreen() {
           headerStyle: { backgroundColor: Colors.background },
           headerTitleStyle: { color: Colors.text },
           headerTintColor: Colors.text, 
-          headerBackTitle: ' ', // Remove o "(tabs)"
+          headerBackTitle: ' ', 
         }}
       />
       
-      {/* Carrossel de Imagens */}
+      {/* Carrossel */}
       <View style={styles.carouselContainer}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.carousel}>
+        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
           {estabelecimento.images && estabelecimento.images.length > 0 ? (
             estabelecimento.images.map((img, index) => (
               <Image key={index} source={{ uri: img }} style={styles.image} />
@@ -136,7 +152,7 @@ export default function EstabelecimentoDetalheScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Conteúdo (Nome, Nota, Botões) */}
+      {/* Conteúdo Principal */}
       <View style={styles.infoContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>{estabelecimento.nome}</Text>
@@ -158,7 +174,6 @@ export default function EstabelecimentoDetalheScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Informações (Endereço, etc) */}
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>Endereço:</Text>
           <Text style={styles.infoText}>{estabelecimento.endereco || 'Não informado'}</Text>
@@ -171,9 +186,42 @@ export default function EstabelecimentoDetalheScreen() {
           <Text style={styles.infoTitle}>Horário de funcionamento:</Text>
           <Text style={styles.infoText}>{estabelecimento.horario || 'Não informado'}</Text>
         </View>
+
+        {/* --- 4. NOVA SEÇÃO: AVALIAÇÕES RECENTES --- */}
+        <View style={styles.reviewsSection}>
+          <Text style={styles.sectionTitle}>Avaliações Recentes</Text>
+          
+          {reviews.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhuma avaliação ainda. Seja o primeiro!</Text>
+          ) : (
+            reviews.map((review) => (
+              <View key={review.id} style={styles.reviewCard}>
+                <View style={styles.reviewHeader}>
+                  <Text style={styles.reviewUser}>{review.usuario_nome}</Text>
+                  <View style={styles.reviewRating}>
+                    <Text style={styles.reviewRatingText}>{review.nota}</Text>
+                    <FontAwesome name="star" size={12} color={Colors.primary} />
+                  </View>
+                </View>
+                
+                {/* Só mostra o comentário se ele existir */}
+                {review.comentario ? (
+                  <Text style={styles.reviewComment}>{review.comentario}</Text>
+                ) : (
+                  <Text style={styles.reviewCommentEmpty}>(Sem comentário)</Text>
+                )}
+                
+                <Text style={styles.reviewDate}>
+                  {new Date(review.data).toLocaleDateString('pt-BR')}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
+        {/* ------------------------------------------ */}
+
       </View>
 
-      {/* Modais */}
       <AvaliacaoModal
         visible={isModalVisible}
         onClose={() => setModalVisible(false)}
@@ -189,7 +237,7 @@ export default function EstabelecimentoDetalheScreen() {
   );
 }
 
-// Estilos (Os mesmos que já tínhamos)
+// --- ESTILOS ATUALIZADOS ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -206,7 +254,7 @@ const styles = StyleSheet.create({
     height: 300,
     backgroundColor: Colors.background,
   },
-  carousel: {
+  carousel: { // Adicionado para manter o carrossel funcionando
     width: width,
     height: 300,
   },
@@ -238,12 +286,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: -20,
     marginTop: -20, 
     backgroundColor: Colors.background, 
-  },
-  ranking: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Colors.accentOrange,
-    marginBottom: 4,
   },
   headerRow: {
     flexDirection: 'row',
@@ -307,5 +349,74 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     lineHeight: 20,
+  },
+
+  // --- NOVOS ESTILOS PARA REVIEWS ---
+  reviewsSection: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: Colors.lightGrey,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 15,
+  },
+  reviewCard: {
+    backgroundColor: Colors.white,
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.lightGrey,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  reviewUser: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: Colors.text,
+  },
+  reviewRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${Colors.primary}20`,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  reviewRatingText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginRight: 4,
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 5,
+  },
+  reviewCommentEmpty: {
+    fontSize: 14,
+    color: Colors.grey,
+    fontStyle: 'italic',
+    marginBottom: 5,
+  },
+  reviewDate: {
+    fontSize: 12,
+    color: Colors.grey,
+    textAlign: 'right',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.grey,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
