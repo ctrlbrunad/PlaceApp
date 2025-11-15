@@ -39,11 +39,13 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
       router.push('/minhas-avaliacoes');
     } else if (key === 'favoritos') {
       router.push('/meus-favoritos');
-    } else if (key === 'configuracoes') { // <-- ADICIONADO
-      // Navega para a nova tela de configurações
+    } else if (key === 'configuracoes') { 
       router.push('/configuracoes'); 
+    } else if (key === 'conquistas') { // <-- ADICIONADO
+      // Navega para a nova tela de conquistas
+      router.push('/conquistas');
     } else {
-      // Mantém o alerta para os outros botões
+      // Mantém o alerta para os outros botões (Locais Visitados)
       alert(`Opção "${key}" clicada. Navegação não implementada.`);
     }
   };
