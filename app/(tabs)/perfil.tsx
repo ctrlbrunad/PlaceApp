@@ -1,55 +1,81 @@
+// --- 1. ADICIONAR 'Alert' À LISTA DE IMPORTS ---
 import { Feather, FontAwesome } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Colors from '../../constants/Colors';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 
-// Importar o modal do menu
 import ProfileMenuModal from '../../components/ProfileMenuModal';
 
 const colors = Colors;
 
+// Interface da Review (igual)
+interface MinhaReview {
+  id: string | number;
+  nota: number;
+  comentario: string;
+  data: string;
+  estabelecimento_nome: string;
+  estabelecimento_id: string;
+}
+
 export default function ProfileScreen() {
   const { user, logout, isLoading } = useAuth();
+  
   const [stats, setStats] = useState({ reviews: 0, lists: 0 });
-  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [reviews, setReviews] = useState<MinhaReview[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  
   const [isMenuVisible, setMenuVisible] = useState(false);
+  const router = useRouter(); 
 
   useEffect(() => {
     if (!user) {
       return;
     }
-    const fetchProfileStats = async () => {
+
+    const fetchProfileData = async () => {
       try {
-        setIsStatsLoading(true);
-        const response = await api.get('/users/me');
-        const { reviewsCount, listsCount } = response.data;
+        setIsDataLoading(true);
+        
+        const [statsRes, reviewsRes] = await Promise.all([
+          api.get('/users/me'),        
+          api.get('/reviews/me') 
+        ]);
+
+        const { reviewsCount, listsCount } = statsRes.data;
         setStats({
           reviews: reviewsCount || 0,
           lists: listsCount || 0,
         });
+        
+        setReviews(reviewsRes.data.data);
+
       } catch (error) {
-        console.error("Erro ao buscar estatísticas do perfil:", error);
+        console.error("Erro ao buscar dados do perfil:", error);
+        // O 'Alert' agora será encontrado
+        Alert.alert("Erro", "Não foi possível carregar todos os dados do perfil.");
       } finally {
-        setIsStatsLoading(false);
+        setIsDataLoading(false);
       }
     };
-    fetchProfileStats();
+
+    fetchProfileData();
   }, [user]); 
 
+  // Loading da autenticação (tela inteira)
   if (isLoading || !user) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
     <>
-      {/* Configuração do Cabeçalho com o ícone de menu */}
       <Stack.Screen
         options={{
           title: 'Perfil',
@@ -68,8 +94,8 @@ export default function ProfileScreen() {
         }}
       />
       
-      {/* Conteúdo da Tela */}
-      <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        {/* Card do Perfil */}
         <View style={styles.profileCard}>
           <TouchableOpacity style={styles.avatarContainer}>
             {user.imageUrl ? ( 
@@ -88,22 +114,51 @@ export default function ProfileScreen() {
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
               <FontAwesome name="star" size={24} color={colors.primary} />
               <Text style={[styles.statNumber, { color: colors.text }]}>
-                {isStatsLoading ? '...' : stats.reviews}
+                {isDataLoading ? '...' : stats.reviews}
               </Text>
               <Text style={styles.statLabel}>Avaliações</Text>
             </View>
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
-              <FontAwesome name="list-ul" size={24} color={Colors.primary} />
+              <FontAwesome name="list-ul" size={24} color={colors.primary} />
               <Text style={[styles.statNumber, { color: colors.text }]}>
-                {isStatsLoading ? '...' : stats.lists}
+                {isDataLoading ? '...' : stats.lists}
               </Text>
               <Text style={styles.statLabel}>Listas</Text>
             </View>
           </View>
         </View>
+
+        {/* Seção "Avaliações Recentes" */}
+        <Text style={styles.sectionTitle}>Avaliações Recentes</Text>
+        {isDataLoading ? (
+          <ActivityIndicator size="large" color={Colors.primary} />
+        ) : reviews.length === 0 ? (
+          <Text style={styles.emptyText}>Você ainda não fez nenhuma avaliação.</Text>
+        ) : (
+          reviews.slice(0, 3).map((review) => (
+            <TouchableOpacity 
+              key={review.id} 
+              style={styles.reviewCard} 
+              onPress={() => router.push(`/estabelecimento/${review.estabelecimento_id}`)}
+            >
+              <View style={styles.reviewHeader}>
+                <Text style={styles.reviewEstabelecimento}>{review.estabelecimento_nome}</Text>
+                <View style={styles.reviewRating}>
+                  <Text style={styles.reviewRatingText}>{review.nota}</Text>
+                  <FontAwesome name="star" size={12} color={Colors.primary} />
+                </View>
+              </View>
+              {review.comentario ? (
+                <Text style={styles.reviewComment} numberOfLines={2}>{review.comentario}</Text>
+              ) : (
+                <Text style={styles.reviewCommentEmpty}>(Sem comentário)</Text>
+              )}
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
-      {/* Modal do Menu (que contém o botão "Sair") */}
+      {/* Modal do Menu */}
       <ProfileMenuModal
         visible={isMenuVisible}
         onClose={() => setMenuVisible(false)}
@@ -113,13 +168,16 @@ export default function ProfileScreen() {
   );
 }
 
-// --- Estilos ---
+// --- Estilos (Os mesmos de antes) ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 16,
   },
   center: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -151,7 +209,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: colors.primary, // Adicionando a borda aqui
+    borderColor: colors.primary, 
   },
   userName: {
     fontSize: 24,
@@ -173,7 +231,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     width: '45%',
-    backgroundColor: `${Colors.primary}20`, // Adicionando o fundo
+    backgroundColor: `${Colors.primary}20`, 
   },
   statNumber: {
     fontSize: 28,
@@ -184,5 +242,65 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginTop: 4,
+  },
+
+  // (Estilos para a nova seção de reviews)
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 10,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.grey,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginBottom: 10,
+  },
+  reviewCard: {
+    backgroundColor: Colors.white,
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.lightGrey,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reviewEstabelecimento: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: Colors.text,
+    flex: 1, 
+  },
+  reviewRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${Colors.primary}20`,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  reviewRatingText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginRight: 4,
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: '#555',
+    fontStyle: 'italic',
+  },
+  reviewCommentEmpty: {
+    fontSize: 14,
+    color: Colors.grey,
+    fontStyle: 'italic',
   },
 });

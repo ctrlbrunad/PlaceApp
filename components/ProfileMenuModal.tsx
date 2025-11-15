@@ -36,11 +36,12 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
     onClose(); // Fecha o modal
     
     if (key === 'avaliacoes') {
-      // Navega para a tela de avaliações
       router.push('/minhas-avaliacoes');
     } else if (key === 'favoritos') {
-      // Navega para a nova tela de favoritos
       router.push('/meus-favoritos');
+    } else if (key === 'configuracoes') { // <-- ADICIONADO
+      // Navega para a nova tela de configurações
+      router.push('/configuracoes'); 
     } else {
       // Mantém o alerta para os outros botões
       alert(`Opção "${key}" clicada. Navegação não implementada.`);

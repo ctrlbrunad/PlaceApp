@@ -1,202 +1,295 @@
-// app/(tabs)/listas.tsx (VERSÃO FINAL COM MODAL DE DELETAR)
-import { FontAwesome5 } from '@expo/vector-icons';
-import { useIsFocused } from '@react-navigation/native';
-import { Link, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Modal from 'react-native-modal'; // <-- 1. IMPORTA O MODAL
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import Colors from '../../constants/Colors';
-import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 
-// Interface (igual)
-interface Lista { id: number; nome: string; publica: boolean; }
+// Interface para "Minhas Listas"
+interface MinhaLista {
+  id: string | number;
+  nome: string;
+  publica: boolean;
+}
 
-export default function ListasScreen() {
-  const [listas, setListas] = useState<Lista[]>([]);
+// Interface para "Listas Públicas"
+interface PublicaLista {
+  id: string | number;
+  nome: string;
+  usuario_nome: string;
+  total_estabelecimentos: number;
+}
+
+export default function PlacelistsScreen() {
+  const [minhasListas, setMinhasListas] = useState<MinhaLista[]>([]);
+  const [publicListas, setPublicListas] = useState<PublicaLista[]>([]);
+  const [activeSegment, setActiveSegment] = useState<'minhas' | 'publicas'>('minhas');
   const [isLoading, setIsLoading] = useState(true);
-  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false); // <-- 2. Estado para o modal
-  const [listaParaDeletar, setListaParaDeletar] = useState<Lista | null>(null); // <-- 3. Estado para saber QUAL lista deletar
+  const router = useRouter();
 
-  const { token } = useAuth();
-  const router = useRouter(); 
-  const isFocused = useIsFocused();
+  // useEffect (está correto, busca ambos)
+  useFocusEffect(
+    useCallback(() => {
+      const fetchListas = async () => {
+        try {
+          setIsLoading(true);
+          const [minhasRes, publicasRes] = await Promise.all([
+            api.get('/listas'),
+            api.get('/listas/public') 
+          ]); 
+          setMinhasListas(minhasRes.data);
+          setPublicListas(publicasRes.data);
+        } catch (error) {
+          console.error("Erro ao buscar Placelists:", error);
+          Alert.alert("Erro", "Não foi possível carregar as Placelists.");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchListas();
+    }, [])
+  );
 
-  // Função para buscar as listas (igual)
-  const buscarListas = async () => { /* ... (código igual) ... */ setIsLoading(true); try { const response = await api.get('/listas'); setListas(response.data); } catch (error) { console.error("Erro...", error); Alert.alert("Erro", "Não..."); } finally { setIsLoading(false); } };
-  useEffect(() => { if (isFocused && token) { buscarListas(); } else if (!token) { setIsLoading(false); } }, [token, isFocused]);
-
-  // handleCriarLista (igual)
-  const handleCriarLista = () => { router.push('/criarLista'); };
-
-  // --- 4. FUNÇÕES DE DELETAR ATUALIZADAS PARA O MODAL ---
+  // Renderizador para "Minhas Listas" (está correto)
+  const renderMinhasListasItem = ({ item }: { item: MinhaLista }) => (
+    <TouchableOpacity 
+      style={styles.itemContainer}
+      onPress={() => router.push(`/lista/${item.id}`)}
+    >
+      <View style={styles.itemIcon}>
+        <FontAwesome name="list-ul" size={20} color={Colors.primary} />
+      </View>
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemNome}>{item.nome}</Text>
+        <Text style={styles.itemDetalhes}>
+          {item.publica ? "Pública" : "Privada"}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={24} color={Colors.grey} />
+    </TouchableOpacity>
+  );
   
-  // Esta é chamada pelo botão "Deletar" DENTRO do modal
-  const handleConfirmarDelecao = async () => {
-    if (!listaParaDeletar) return; // Segurança
-    
-    try {
-      await api.delete(`/listas/${listaParaDeletar.id}`);
-      setListas(listasAtuais => 
-        listasAtuais.filter(l => l.id !== listaParaDeletar.id)
-      );
-    } catch (error) {
-      console.error("Erro ao deletar lista:", error);
-      Alert.alert("Erro", "Não foi possível deletar a lista.");
-    } finally {
-      // Fecha o modal
-      setDeleteModalVisible(false);
-      setListaParaDeletar(null);
-    }
-  };
+  // Renderizador para "Listas Públicas" (está correto)
+  const renderPublicasListasItem = ({ item }: { item: PublicaLista }) => (
+    <TouchableOpacity 
+      style={styles.itemContainer}
+      onPress={() => router.push(`/lista/${item.id}`)}
+    >
+      <View style={styles.itemIcon}>
+        <Ionicons name="people" size={20} color={Colors.primary} />
+      </View>
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemNome}>{item.nome}</Text>
+        <Text style={styles.itemDetalhes}>
+          Criada por {item.usuario_nome}
+        </Text>
+      </View>
+      <Text style={styles.itemCount}>{item.total_estabelecimentos} locais</Text>
+    </TouchableOpacity>
+  );
 
-  // Esta função é chamada pela lixeira (só abre o modal)
-  const handleAbrirModalDelecao = (lista: Lista) => {
-    setListaParaDeletar(lista); // Guarda qual lista estamos deletando
-    setDeleteModalVisible(true); // Abre o modal
-  };
-
-  // --- 5. RENDER ITEM ATUALIZADO (com useCallback) ---
-  const renderItem = useCallback(({ item }: { item: Lista }) => (
-    <View style={styles.listItem}>
-      {/* Link para detalhes (igual) */}
-      <Link 
-        href={{ pathname: "../lista/[id]", params: { id: item.id } }} 
-        asChild
-      >
-        <TouchableOpacity style={styles.listNomeContainer}>
-          <Text style={styles.listNome}>{item.nome}</Text>
-          <Text style={styles.listStatus}>{item.publica ? 'Pública' : 'Privada'}</Text>
-        </TouchableOpacity>
-      </Link>
-      
-      {/* Botão de Deletar (agora chama o modal) */}
-      <TouchableOpacity 
-        style={styles.deleteButton}
-        onPress={() => handleAbrirModalDelecao(item)} // <-- 6. CHAMA O MODAL
-      >
-        <FontAwesome5 name="trash-alt" size={20} color={Colors.accentOrange} />
-      </TouchableOpacity>
-    </View>
-  ), []); // useCallback sem dependências, pois a função de abrir o modal é estável
-
-  // if (isLoading) (igual)
-  if (isLoading && listas.length === 0) {
+  // Tela de Loading
+  if (isLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-      </SafeAreaView>
+      </View>
     );
   }
 
+  // --- CORREÇÃO AQUI ---
+  // Trocamos 1 FlatList dinâmico por 2 FlatLists estáticos
   return (
-    <SafeAreaView style={styles.container}>
-      {/* O cabeçalho é definido pelo _layout.tsx (correto) */}
+    <SafeAreaView style={styles.safeArea}>
       
-      {listas.length === 0 ? (
-        <Text style={styles.emptyText}>Você ainda não criou nenhuma lista.</Text>
-      ) : (
+      {/* Controle Segmentado (igual) */}
+      <View style={styles.segmentContainer}>
+        <TouchableOpacity
+          style={[styles.segmentButton, activeSegment === 'minhas' && styles.segmentButtonActive]}
+          onPress={() => setActiveSegment('minhas')}
+        >
+          <Text style={[styles.segmentText, activeSegment === 'minhas' && styles.segmentTextActive]}>Minhas Placelists</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentButton, activeSegment === 'publicas' && styles.segmentButtonActive]}
+          onPress={() => setActiveSegment('publicas')}
+        >
+          <Text style={[styles.segmentText, activeSegment === 'publicas' && styles.segmentTextActive]}>Explorar</Text>
+        </TouchableOpacity>
+      </View>
+      
+      {/* Se a aba "minhas" estiver ativa, mostra esta lista */}
+      {activeSegment === 'minhas' && (
         <FlatList
-          data={listas}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          onRefresh={buscarListas}
-          refreshing={isLoading}
+          data={minhasListas}
+          renderItem={renderMinhasListasItem}
+          keyExtractor={(item) => String(item.id)}
+          style={styles.container}
+          ListFooterComponent={<View style={{ height: 100 }} />}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Você ainda não criou nenhuma Placelist.</Text>
+              <Text style={styles.emptySubText}>Clique no '+' para começar!</Text>
+            </View>
+          }
+        />
+      )}
+      
+      {/* Se a aba "publicas" estiver ativa, mostra esta lista */}
+      {activeSegment === 'publicas' && (
+        <FlatList
+          data={publicListas}
+          renderItem={renderPublicasListasItem}
+          keyExtractor={(item) => String(item.id)}
+          style={styles.container}
+          ListFooterComponent={<View style={{ height: 100 }} />}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhuma Placelist pública encontrada.</Text>
+            </View>
+          }
         />
       )}
 
-      {/* --- 7. O MODAL DE CONFIRMAÇÃO --- */}
-      <Modal 
-        isVisible={isDeleteModalVisible}
-        onBackdropPress={() => setDeleteModalVisible(false)} // Fecha ao clicar fora
-      >
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Deletar Lista</Text>
-          <Text style={styles.modalText}>
-            Tem certeza que deseja deletar a lista "{listaParaDeletar?.nome}"?
-          </Text>
-          <View style={styles.modalButtonContainer}>
-            <TouchableOpacity 
-              style={[styles.modalButton, styles.modalButtonCancel]}
-              onPress={() => setDeleteModalVisible(false)}
-            >
-              <Text style={styles.modalButtonTextCancel}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.modalButton, styles.modalButtonDelete]}
-              onPress={handleConfirmarDelecao}
-            >
-              <Text style={styles.modalButtonTextDelete}>Deletar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Botão FAB (igual) */}
+      {activeSegment === 'minhas' && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/criarLista')}
+        >
+          <Ionicons name="add" size={32} color={Colors.white} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
 
-// --- 8. ESTILOS ATUALIZADOS (com estilos do modal) ---
+// Estilos (os mesmos de antes)
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
-  listItem: {
-    backgroundColor: Colors.white,
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: Colors.lightGrey,
+  safeArea: { 
+    flex: 1, 
+    backgroundColor: Colors.background 
+  },
+  container: { 
+    flex: 1,
+  },
+  loadingContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: Colors.background 
+  },
+  emptyContainer: { 
+    padding: 20, 
+    marginTop: 50, 
+    alignItems: 'center' 
+  },
+  emptyText: { 
+    fontSize: 16, 
+    fontWeight: 'bold',
+    color: Colors.text, 
+    textAlign: 'center' 
+  },
+  emptySubText: {
+    fontSize: 14, 
+    color: Colors.grey, 
+    textAlign: 'center',
+    marginTop: 5,
+  },
+  segmentContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: Colors.white,
+    marginHorizontal: 15,
+    marginVertical: 10,
+    borderRadius: 10,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, },
+      android: { elevation: 2, },
+    }),
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginHorizontal: 20,
+    justifyContent: 'center',
   },
-  listNomeContainer: { flex: 1 },
-  listNome: { fontSize: 18, color: Colors.text, fontWeight: '600', },
-  listStatus: { fontSize: 14, color: Colors.grey },
-  deleteButton: { paddingLeft: 15, paddingVertical: 5 },
-  emptyText: { fontSize: 16, color: Colors.grey, textAlign: 'center', marginTop: 50 },
-
-  // Estilos do Modal
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
+  segmentButtonActive: {
+    backgroundColor: Colors.text,
+    borderRadius: 10,
   },
-  modalTitle: {
-    fontSize: 20,
+  segmentText: {
+    fontSize: 14,
     fontWeight: 'bold',
     color: Colors.text,
-    marginBottom: 10,
   },
-  modalText: {
-    fontSize: 16,
-    color: Colors.text,
-    marginBottom: 20,
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginLeft: 10,
-  },
-  modalButtonCancel: {
-    backgroundColor: Colors.lightGrey,
-  },
-  modalButtonDelete: {
-    backgroundColor: Colors.accentOrange,
-  },
-  modalButtonTextCancel: {
-    color: Colors.text,
-    fontWeight: '600',
-  },
-  modalButtonTextDelete: {
+  segmentTextActive: {
     color: Colors.white,
-    fontWeight: '600',
+  },
+  itemContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: Colors.white, 
+    padding: 15, 
+    marginHorizontal: 15, 
+    marginVertical: 8, 
+    borderRadius: 12,
+    ...Platform.select({ 
+      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, }, 
+      android: { elevation: 2, }, 
+    }), 
+  },
+  itemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: `${Colors.primary}20`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  itemInfo: { 
+    flex: 1, 
+    marginLeft: 15 
+  },
+  itemNome: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: Colors.text, 
+    marginBottom: 4 
+  },
+  itemDetalhes: { 
+    fontSize: 13, 
+    color: Colors.grey 
+  },
+  itemCount: {
+    fontSize: 12,
+    color: Colors.grey,
+    fontWeight: 'bold',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 30, 
+    right: 20, 
+    width: 60,
+    height: 60,
+    borderRadius: 30, 
+    backgroundColor: Colors.primary, 
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3, },
+      android: { elevation: 6, },
+    }),
   },
 });

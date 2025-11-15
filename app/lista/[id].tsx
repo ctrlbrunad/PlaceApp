@@ -1,4 +1,4 @@
-// app/lista/[id].tsx (VERSÃO CORRIGIDA COM FOTOS)
+// app/lista/[id].tsx (VERSÃO CORRIGIDA)
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
@@ -16,7 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
 import api from '../../src/services/api';
 
-// --- 2. ATUALIZE A INTERFACE ---
+// --- 1. IMPORTAR O 'useAuth' ---
+import { useAuth } from '../../src/context/AuthContext';
+
+// ... (Interface Estabelecimento e ListaDetalhada - permanecem iguais)
 interface Estabelecimento { 
   id: string; 
   nome: string; 
@@ -25,13 +28,13 @@ interface Estabelecimento {
   endereco: string; 
   media_notas: string; 
   total_avaliacoes: number; 
-  images?: string[]; // <-- Adicione este campo
+  images?: string[];
 }
 interface ListaDetalhada {
   id: number;
   nome: string;
   publica: boolean;
-  usuario_id: string;
+  usuario_id: string; // ID do dono da lista
   usuario_nome: string;
   estabelecimentos: Estabelecimento[];
 }
@@ -43,8 +46,11 @@ export default function ListaDetalheScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  // ... (Sua lógica 'buscarDetalhesDaLista', 'handleDeletarLista', 'useLayoutEffect', 'handleRemoverEstabelecimento' 
-  //     permanece exatamente a mesma, pois já está correta.tsx])
+  // --- 2. PEGAR O USUÁRIO LOGADO ---
+  const { user } = useAuth(); // Pega o 'user' do AuthContext
+
+  // ... (buscarDetalhesDaLista, handleDeletarLista, useLayoutEffect, handleRemoverEstabelecimento
+  //     permanecem os mesmos.tsx])
   const buscarDetalhesDaLista = async () => { setIsLoading(true); try { const response = await api.get(`/listas/${id}`); setLista(response.data); } catch (error) { console.error("Erro...", error); Alert.alert("Erro", "Não..."); } finally { setIsLoading(false); } };
   useEffect(() => { if (id) { buscarDetalhesDaLista(); } }, [id]);
 
@@ -95,34 +101,40 @@ export default function ListaDetalheScreen() {
     }
    }, [id]);
 
-  // --- 3. ATUALIZE A FUNÇÃO 'renderEstabelecimentoItem' ---
+  
   const renderEstabelecimentoItem = useCallback(({ item }: { item: Estabelecimento }) => {
     
-    // Pega a primeira imagem do array, ou usa um placeholder
     const imageUrl = (item.images && item.images.length > 0)
       ? item.images[0]
       : 'https://placeholder.com/100x100.png?text=Sem+Foto';
 
+    // --- 3. VERIFICAR SE O USUÁRIO É O DONO DA LISTA ---
+    const isOwner = user && lista && user.id === lista.usuario_id;
+
     return (
       <View style={styles.itemContainer}>
-        {/* Troca o <View> por <Image> */}
         <Image source={{ uri: imageUrl }} style={styles.itemImage} />
         
         <View style={styles.itemInfo}>
           <Text style={styles.itemNome}>{item.nome}</Text>
           <Text style={styles.itemDetalhes}>{item.subcategoria}</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.itemRemoveButton}
-          onPress={() => handleRemoverEstabelecimento(item.id)}
-        >
-          <FontAwesome5 name="times-circle" size={24} color={Colors.grey} />
-        </TouchableOpacity>
+
+        {/* --- 4. SÓ MOSTRAR O "X" SE FOR O DONO --- */}
+        {isOwner && (
+          <TouchableOpacity 
+            style={styles.itemRemoveButton}
+            onPress={() => handleRemoverEstabelecimento(item.id)}
+          >
+            <FontAwesome5 name="times-circle" size={24} color={Colors.grey} />
+          </TouchableOpacity>
+        )}
       </View>
     );
-  }, [handleRemoverEstabelecimento]); //.tsx]
+  // --- 5. ADICIONAR 'user' E 'lista' ÀS DEPENDÊNCIAS DO 'useCallback' ---
+  }, [handleRemoverEstabelecimento, user, lista]); 
 
-  // ... (Sua lógica de renderização de Loading/Vazio permanece a mesma)
+  // ... (lógica de renderização de loading/vazio)
   if (isLoading) {
     return ( <SafeAreaView style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.primary} /></SafeAreaView> );
   }
@@ -139,7 +151,7 @@ export default function ListaDetalheScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.headerStatus}>
-              {lista.publica ? 'Lista Pública' : 'Lista Privada'}
+              {lista.publica ? 'Lista Pública' : 'Lista Privada'} · Criada por {lista.usuario_nome}
             </Text>
           </View>
         }
@@ -151,7 +163,7 @@ export default function ListaDetalheScreen() {
   );
 }
 
-// --- 4. ATUALIZE OS ESTILOS ---
+// Estilos (os mesmos da última correção)
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
@@ -159,16 +171,13 @@ const styles = StyleSheet.create({
   headerStatus: { fontSize: 14, color: Colors.grey },
   emptyText: { fontSize: 16, color: Colors.grey, textAlign: 'center', marginTop: 50 },
   itemContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, padding: 15, marginHorizontal: 15, marginVertical: 8, borderRadius: 12 },
-  
-  // Renomeado 'itemImagePlaceholder' para 'itemImage'
   itemImage: { 
     width: 60, 
     height: 60, 
     borderRadius: 8, 
     backgroundColor: Colors.lightGrey,
-    resizeMode: 'cover', // Adicionado
+    resizeMode: 'cover',
   },
-
   itemInfo: { flex: 1, marginLeft: 15 },
   itemNome: { fontSize: 16, fontWeight: 'bold', color: Colors.text },
   itemDetalhes: { fontSize: 13, color: Colors.grey },
