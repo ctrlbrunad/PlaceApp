@@ -1,6 +1,5 @@
-// app/(auth)/register.tsx (VERSÃO COMPLETA DO FORMULÁRIO)
 import axios from 'axios';
-import { useRouter } from 'expo-router'; // 2. Importa o router
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,18 +11,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
-import api from '../../src/services/api'; // 1. Importa a API
+import api from '../../src/services/api';
 
 export default function RegisterScreen() {
-  const [nome, setNome] = useState(''); // 3. Adiciona o estado 'nome'
+  const [nome, setNome] = useState(''); 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter(); // Para navegar
+  const router = useRouter(); 
 
-  // 4. Lógica para o botão "Cadastrar"
   const handleRegister = async () => {
-    // Validação
+  
     if (nome.trim() === '' || email.trim() === '' || senha.trim() === '') {
       Alert.alert('Erro', 'Nome, email e senha são obrigatórios.');
       return;
@@ -31,15 +29,13 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      // 5. Chama a API de registro do backend
-      // (Exatamente a rota que testamos no Postman)
+      // Chama a API de registro do backend
       await api.post('/auth/register', {
         nome,
         email,
         senha,
       });
 
-      // 6. Sucesso!
       setLoading(false);
       Alert.alert(
         'Sucesso!',
@@ -49,10 +45,9 @@ export default function RegisterScreen() {
       router.replace('/login');
 
     } catch (error) {
-      // 7. Erro!
+  
       setLoading(false);
       if (axios.isAxiosError(error) && error.response) {
-        // Mostra o erro do backend (ex: "Este email já está em uso.")
         Alert.alert('Erro no Cadastro', error.response.data.message);
       } else {
         console.error(error);

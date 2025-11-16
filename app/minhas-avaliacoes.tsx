@@ -2,21 +2,19 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '../constants/Colors';
 import api from '../src/services/api';
-
-// Interface para os dados que esperamos da API
 interface MinhaReview {
   id: string | number;
   nota: number;
@@ -31,7 +29,6 @@ export default function MinhasAvaliacoesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Busca os dados da nova rota /reviews/me
   useEffect(() => {
     const fetchMinhasReviews = async () => {
       try {
@@ -49,7 +46,6 @@ export default function MinhasAvaliacoesScreen() {
     fetchMinhasReviews();
   }, []);
 
-  // Item da lista (seu "overview")
   const renderItem = ({ item }: { item: MinhaReview }) => (
     <TouchableOpacity 
       style={styles.itemContainer}
@@ -107,7 +103,7 @@ export default function MinhasAvaliacoesScreen() {
         renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
         style={styles.container}
-        // Adiciona um espaçamento no final (como na tela de estabelecimentos)
+        // Adiciona um espaçamento no final 
         ListFooterComponent={<View style={{ height: 100 }} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -119,7 +115,6 @@ export default function MinhasAvaliacoesScreen() {
   );
 }
 
-// Estilos (seguindo o padrão visual do seu TCC)
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },

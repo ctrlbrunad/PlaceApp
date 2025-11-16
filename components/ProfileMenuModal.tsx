@@ -18,7 +18,6 @@ type Props = {
   onLogout: () => void;
 };
 
-// A lista de itens (correta, como no seu arquivo)
 const menuItems = [
   { key: 'avaliacoes', title: 'Minhas Avaliações' },
   { key: 'favoritos', title: 'Meus Favoritos' },
@@ -31,9 +30,8 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
   
   const router = useRouter();
   
-  // --- ATUALIZAÇÃO AQUI ---
   const handleMenuItemPress = (key: string) => {
-    onClose(); // Fecha o modal
+    onClose(); 
     
     if (key === 'avaliacoes') {
       router.push('/minhas-avaliacoes');
@@ -41,11 +39,9 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
       router.push('/meus-favoritos');
     } else if (key === 'configuracoes') { 
       router.push('/configuracoes'); 
-    } else if (key === 'conquistas') { // <-- ADICIONADO
-      // Navega para a nova tela de conquistas
+    } else if (key === 'conquistas') { 
       router.push('/conquistas');
     } else {
-      // Mantém o alerta para os outros botões (Locais Visitados)
       alert(`Opção "${key}" clicada. Navegação não implementada.`);
     }
   };

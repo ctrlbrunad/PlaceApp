@@ -1,22 +1,21 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import Colors from '../constants/Colors';
 import { useAuth } from '../src/context/AuthContext';
 import api from '../src/services/api';
 
-// --- 1. CORREÇÃO DO CAMINHO (../ e 'avatares') ---
 const AVATARS = [
   'default.png', 
   'avatar1.png', 
@@ -27,7 +26,6 @@ const AVATARS = [
   'avatar6.png',
   'avatar7.png',
   'avatar8.png',
-  // Adicione os outros que você tem (avatar6, avatar7, avatar8)
 ];
 
 const avatarImages = {
@@ -49,7 +47,6 @@ export default function SelecionarAvatarScreen() {
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar_id || 'default.png');
   const [loading, setLoading] = useState(false);
 
-  // handleSave (correto)
   const handleSave = async () => {
     if (selectedAvatar === user?.avatar_id) {
       router.back();

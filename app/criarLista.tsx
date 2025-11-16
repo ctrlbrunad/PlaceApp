@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Stack, useRouter } from 'expo-router'; // 1. IMPORTAR O 'Stack'
+import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // 2. IMPORTAR A 'SafeAreaView'
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
 import api from '../src/services/api';
 
@@ -50,7 +50,7 @@ export default function CriarListaScreen() {
   };
 
   return (
-    // 3. USAR 'SafeAreaView' E ADICIONAR O 'Stack.Screen'
+
     <SafeAreaView style={styles.container}>
       {/* Configura o cabeçalho desta tela */}
       <Stack.Screen 
@@ -58,7 +58,7 @@ export default function CriarListaScreen() {
           title: 'Criar Nova Lista',
           headerStyle: { backgroundColor: Colors.background },
           headerTitleStyle: { color: Colors.text },
-          headerTintColor: Colors.text, // Cor da seta "voltar"
+          headerTintColor: Colors.text, 
         }} 
       />
       
@@ -100,7 +100,6 @@ export default function CriarListaScreen() {
   );
 }
 
-// Estilos (os mesmos do seu arquivo)
 const styles = StyleSheet.create({
   container: {
     flex: 1,

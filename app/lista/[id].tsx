@@ -1,4 +1,3 @@
-// app/lista/[id].tsx (VERSÃO CORRIGIDA)
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
@@ -14,12 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
+import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 
-// --- 1. IMPORTAR O 'useAuth' ---
-import { useAuth } from '../../src/context/AuthContext';
-
-// ... (Interface Estabelecimento e ListaDetalhada - permanecem iguais)
 interface Estabelecimento { 
   id: string; 
   nome: string; 
@@ -45,12 +41,7 @@ export default function ListaDetalheScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const navigation = useNavigation();
-
-  // --- 2. PEGAR O USUÁRIO LOGADO ---
-  const { user } = useAuth(); // Pega o 'user' do AuthContext
-
-  // ... (buscarDetalhesDaLista, handleDeletarLista, useLayoutEffect, handleRemoverEstabelecimento
-  //     permanecem os mesmos.tsx])
+  const { user } = useAuth(); 
   const buscarDetalhesDaLista = async () => { setIsLoading(true); try { const response = await api.get(`/listas/${id}`); setLista(response.data); } catch (error) { console.error("Erro...", error); Alert.alert("Erro", "Não..."); } finally { setIsLoading(false); } };
   useEffect(() => { if (id) { buscarDetalhesDaLista(); } }, [id]);
 
@@ -108,7 +99,7 @@ export default function ListaDetalheScreen() {
       ? item.images[0]
       : 'https://placeholder.com/100x100.png?text=Sem+Foto';
 
-    // --- 3. VERIFICAR SE O USUÁRIO É O DONO DA LISTA ---
+    // --- 3. VERIFICA SE O USUÁRIO É O DONO DA LISTA ---
     const isOwner = user && lista && user.id === lista.usuario_id;
 
     return (
@@ -131,10 +122,8 @@ export default function ListaDetalheScreen() {
         )}
       </View>
     );
-  // --- 5. ADICIONAR 'user' E 'lista' ÀS DEPENDÊNCIAS DO 'useCallback' ---
   }, [handleRemoverEstabelecimento, user, lista]); 
 
-  // ... (lógica de renderização de loading/vazio)
   if (isLoading) {
     return ( <SafeAreaView style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.primary} /></SafeAreaView> );
   }
@@ -163,7 +152,6 @@ export default function ListaDetalheScreen() {
   );
 }
 
-// Estilos (os mesmos da última correção)
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },

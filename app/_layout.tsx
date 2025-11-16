@@ -1,14 +1,9 @@
-// app/_layout.tsx (VERSÃO FINAL CORRIGIDA)
-
 import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-
-// Caminhos corretos (um nível acima)
 import Colors from '../constants/Colors';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 
-// O "Porteiro" em si
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();

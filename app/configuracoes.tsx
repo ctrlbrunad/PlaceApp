@@ -68,11 +68,9 @@ export default function ConfiguracoesScreen() {
 
     setLoadingSenha(true);
     try {
-      // Chama a nova API do Backend
       await api.put('/users/me/senha', { novaSenha });
 
       Alert.alert('Sucesso!', 'Sua senha foi alterada.');
-      // Limpa os campos
       setNovaSenha('');
       setConfirmarSenha('');
 
@@ -96,7 +94,7 @@ export default function ConfiguracoesScreen() {
       />
       
       <ScrollView contentContainerStyle={styles.form}>
-        {/* --- Formulário de Alterar Nome (igual) --- */}
+        {/* --- Formulário p alterar nome --- */}
         <Text style={styles.label}>Alterar nome de exibição</Text>
         <TextInput
           style={styles.input}
@@ -116,7 +114,7 @@ export default function ConfiguracoesScreen() {
           )}
         </TouchableOpacity>
         
-        {/* --- 3. ADICIONAR FORMULÁRIO DE ALTERAR SENHA --- */}
+        {/* --- 3. ADICIONA FORMULÁRIO DE ALTERAR SENHA --- */}
         <View style={styles.divider} />
 
         <Text style={styles.label}>Alterar Senha</Text>
@@ -126,7 +124,7 @@ export default function ConfiguracoesScreen() {
           value={novaSenha}
           onChangeText={setNovaSenha}
           placeholderTextColor={Colors.grey}
-          secureTextEntry // Esconde a senha
+          secureTextEntry 
         />
         <TextInput
           style={styles.input}
@@ -134,7 +132,7 @@ export default function ConfiguracoesScreen() {
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
           placeholderTextColor={Colors.grey}
-          secureTextEntry // Esconde a senha
+          secureTextEntry 
         />
         <TouchableOpacity 
           style={styles.button}
@@ -152,7 +150,6 @@ export default function ConfiguracoesScreen() {
   );
 }
 
-// --- 4. ATUALIZAR ESTILOS ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -194,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  // Divisor entre os formulários
+
   divider: {
     height: 1,
     backgroundColor: Colors.lightGrey,

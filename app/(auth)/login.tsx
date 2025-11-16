@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,8 +10,6 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-// --- 1. IMPORTAÇÕES ---
-import { useRouter } from 'expo-router';
 import Colors from '../../constants/Colors';
 import { useAuth } from '../../src/context/AuthContext';
 
@@ -19,9 +18,9 @@ export default function LoginScreen() {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const router = useRouter(); // Pega o router
+  const router = useRouter(); 
 
-  // --- 2. LÓGICA DE LOGIN ---
+  // LÓGICA DE LOGIN
   const handleLogin = async () => {
     if (email === '' || senha === '') {
       Alert.alert('Erro', 'Email e senha são obrigatórios.');
@@ -30,7 +29,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email, senha);
-      // O "Porteiro" (app/_layout.tsx) vai cuidar do redirecionamento
+    
     } catch (error) {
       setLoading(false);
       if (axios.isAxiosError(error) && error.response) {
@@ -40,10 +39,8 @@ export default function LoginScreen() {
         Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
       }
     }
-    // Não precisa de setLoading(false) aqui, o app vai navegar
   };
 
-  // --- 3. PARTE VISUAL (JSX) ---
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bem-vindo!</Text>
@@ -79,7 +76,7 @@ export default function LoginScreen() {
       {/* Botão para ir ao Cadastro */}
       <TouchableOpacity 
         style={styles.linkButton} 
-        onPress={() => router.push('/register')} // 'push' para poder voltar
+        onPress={() => router.push('/register')} 
       >
         <Text style={styles.linkText}>Não tem uma conta? Cadastre-se</Text>
       </TouchableOpacity>
@@ -87,7 +84,6 @@ export default function LoginScreen() {
   );
 }
 
-// --- 4. ESTILOS ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,

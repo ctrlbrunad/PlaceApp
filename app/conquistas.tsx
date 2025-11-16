@@ -1,37 +1,35 @@
-import { FontAwesome5 } from '@expo/vector-icons'; // Usaremos a medalha 'award'
+import { FontAwesome5 } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Colors from '../constants/Colors';
 import api from '../src/services/api';
 
-// Interface para os dados que esperamos
 interface UserStats {
   reviewsCount: number;
   listsCount: number;
 }
 
-// Define as "regras" da gamificação
 const conquistas = {
   reviews: [
-    { nome: 'Avaliador Iniciante', meta: 1 },
-    { nome: 'Crítico Júnior', meta: 5 },
-    { nome: 'Crítico Pleno', meta: 10 },
+    { nome: 'Avaliador Iniciante', meta: 5 },
+    { nome: 'Crítico Júnior', meta: 10 },
+    { nome: 'Crítico Pleno', meta: 15 },
     { nome: 'Especialista Local', meta: 20 },
   ],
   lists: [
     { nome: 'Colecionador', meta: 1 },
-    { nome: 'Organizador', meta: 3 },
-    { nome: 'Curador', meta: 5 },
+    { nome: 'Organizador', meta: 5 },
+    { nome: 'Curador', meta: 15 },
   ],
 };
 
@@ -39,12 +37,11 @@ export default function ConquistasScreen() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Busca os dados da rota /users/me (que já usamos no Perfil)
+  // Busca os dados da rota /users/me
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
-        // Rota de stats
         const response = await api.get('/users/me'); 
         setStats({
           reviewsCount: response.data.reviewsCount || 0,

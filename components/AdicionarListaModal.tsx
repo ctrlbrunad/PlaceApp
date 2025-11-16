@@ -2,48 +2,42 @@ import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 
 import Colors from '../constants/Colors';
 import api from '../src/services/api';
 
-// Define o formato de uma lista vinda da API
 interface MinhaLista {
   id: string | number;
   nome: string;
 }
-
-// Define as propriedades que o Modal vai receber
 type Props = {
   visible: boolean;
   onClose: () => void;
-  estabelecimentoId: string | number; // ID do local que queremos adicionar
+  estabelecimentoId: string | number; 
 };
 
 export default function AdicionarListaModal({ visible, onClose, estabelecimentoId }: Props) {
   const [listas, setListas] = useState<MinhaLista[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState<string | number | null>(null); // Salva o ID da lista que está sendo enviada
+  const [isSubmitting, setIsSubmitting] = useState<string | number | null>(null);
   const router = useRouter();
-
-  // Efeito que busca as listas do usuário QUANDO o modal se torna visível
   useEffect(() => {
     if (visible) {
       fetchListas();
     }
   }, [visible]);
 
-  // Função para buscar as listas da API
   const fetchListas = async () => {
     setIsLoading(true);
     try {
@@ -53,23 +47,22 @@ export default function AdicionarListaModal({ visible, onClose, estabelecimentoI
     } catch (error) {
       console.error("Erro ao buscar listas:", error);
       Alert.alert("Erro", "Não foi possível carregar suas listas.");
-      onClose(); // Fecha o modal se der erro
+      onClose(); 
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Função chamada quando o usuário clica em uma lista
   const handleListPress = async (listaId: string | number) => {
-    setIsSubmitting(listaId); // Mostra loading naquela linha específica
+    setIsSubmitting(listaId); 
     try {
-      // Rota POST /listas/:listaId/estabelecimentos do seu backend
+      
       await api.post(`/listas/${listaId}/estabelecimentos`, {
         estabelecimentoId: estabelecimentoId,
       });
       
       Alert.alert("Sucesso!", "Local adicionado à sua lista.");
-      onClose(); // Fecha o modal
+      onClose(); 
 
     } catch (error) {
       console.error("Erro ao adicionar a lista:", error);
@@ -79,14 +72,11 @@ export default function AdicionarListaModal({ visible, onClose, estabelecimentoI
     }
   };
 
-  // Função para navegar para a tela de "Criar Lista"
-  // (Isso já adianta seu "Item 2")
   const handleCriarLista = () => {
     onClose();
-    router.push('/criarLista'); // <-- MUDANÇA AQUI
+    router.push('/criarLista'); 
   };
 
-  // Renderiza o conteúdo do modal
   const renderContent = () => {
     if (isLoading) {
       return <ActivityIndicator size="large" color={Colors.primary} style={{ marginVertical: 40 }} />;
@@ -107,11 +97,10 @@ export default function AdicionarListaModal({ visible, onClose, estabelecimentoI
             key={lista.id} 
             style={styles.listItem}
             onPress={() => handleListPress(lista.id)}
-            disabled={!!isSubmitting} // Desativa todos os botões enquanto um é enviado
+            disabled={!!isSubmitting}
           >
             <FontAwesome name="list-ul" size={22} color={Colors.primary} />
             <Text style={styles.listText}>{lista.nome}</Text>
-            {/* Mostra um loading no item que está sendo enviado */}
             {isSubmitting === lista.id && <ActivityIndicator size="small" color={Colors.primary} />}
           </TouchableOpacity>
         ))}
@@ -154,11 +143,10 @@ export default function AdicionarListaModal({ visible, onClose, estabelecimentoI
   );
 }
 
-// --- Estilos ---
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'transparent', // <-- MUDANÇA AQUI
+    backgroundColor: 'transparent', 
   },
   modalContainer: {
     flex: 1,
@@ -168,8 +156,8 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: Colors.white,
     borderRadius: 20,
-    maxHeight: '60%', // Limita a altura do modal
-    overflow: 'hidden', // Garante que o footer fique preso
+    maxHeight: '60%', 
+    overflow: 'hidden',
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
       android: { elevation: 5 },
@@ -209,7 +197,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   createButton: {
-    backgroundColor: Colors.text, // Marrom
+    backgroundColor: Colors.text, 
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

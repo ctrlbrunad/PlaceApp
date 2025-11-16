@@ -34,7 +34,6 @@ interface Categoria {
   pack: 'FontAwesome5'; 
 }
 
-// Categorias (corretas)
 const categorias: Categoria[] = [
   { key: 'hamburgueria', nome: 'Hamburgueria', icon: 'hamburger', pack: 'FontAwesome5' },
   { key: 'restaurante', nome: 'Restaurante', icon: 'utensils', pack: 'FontAwesome5' },
@@ -82,7 +81,6 @@ export default function HomeScreen() {
     setSearchText(''); 
   };
 
-  // Renderiza o Top 3 (com pódio e medalha)
   const renderTop3Item = ({ item, index }: { item: Estabelecimento; index: number }) => {
     
     const isPrimeiroLugar = index === 1; 
@@ -95,8 +93,7 @@ export default function HomeScreen() {
       : 'https://placeholder.com/100x100.png?text=Sem+Foto';
 
     return (
-      // --- CORREÇÃO AQUI ---
-      // Adicionamos a 'key' única ao item de nível superior da lista
+
       <Link href={`/estabelecimento/${item.id}`} asChild key={item.id}>
         <TouchableOpacity style={cardStyle}>
           <View style={styles.top3Circle}>
@@ -181,7 +178,6 @@ export default function HomeScreen() {
   );
 }
 
-// --- ESTILOS (Os mesmos da versão "Pódio Estático") ---
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },

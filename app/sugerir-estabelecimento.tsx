@@ -1,14 +1,14 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,7 +18,7 @@ import api from '../src/services/api';
 export default function SugerirEstabelecimentoScreen() {
   const [nome, setNome] = useState('');
   const [endereco, setEndereco] = useState('');
-  const [categoria, setCategoria] = useState(''); // O admin classifica depois
+  const [categoria, setCategoria] = useState(''); 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -31,13 +31,9 @@ export default function SugerirEstabelecimentoScreen() {
 
     setLoading(true);
     try {
-      // 2. Chama a API do Backend
-      // Rota POST /sugestoes (RF09) [cite: 155, 289]
       await api.post('/sugestoes', {
         nome: nome,
         endereco: endereco,
-        // O TCC diz 'subcategoriaId'[cite: 261], mas para uma sugestão
-        // é mais fácil o usuário digitar um texto.
         subcategoria: categoria, 
       });
 
@@ -113,7 +109,6 @@ export default function SugerirEstabelecimentoScreen() {
   );
 }
 
-// --- Estilos (baseados no seu 'criarLista.tsx') ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,

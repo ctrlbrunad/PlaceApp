@@ -39,7 +39,6 @@ export default function PlacelistsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // useEffect (está correto, busca ambos)
   useFocusEffect(
     useCallback(() => {
       const fetchListas = async () => {
@@ -62,7 +61,6 @@ export default function PlacelistsScreen() {
     }, [])
   );
 
-  // Renderizador para "Minhas Listas" (está correto)
   const renderMinhasListasItem = ({ item }: { item: MinhaLista }) => (
     <TouchableOpacity 
       style={styles.itemContainer}
@@ -81,7 +79,6 @@ export default function PlacelistsScreen() {
     </TouchableOpacity>
   );
   
-  // Renderizador para "Listas Públicas" (está correto)
   const renderPublicasListasItem = ({ item }: { item: PublicaLista }) => (
     <TouchableOpacity 
       style={styles.itemContainer}
@@ -108,13 +105,10 @@ export default function PlacelistsScreen() {
       </View>
     );
   }
-
-  // --- CORREÇÃO AQUI ---
-  // Trocamos 1 FlatList dinâmico por 2 FlatLists estáticos
   return (
     <SafeAreaView style={styles.safeArea}>
       
-      {/* Controle Segmentado (igual) */}
+      {/* Controle Segmentado */}
       <View style={styles.segmentContainer}>
         <TouchableOpacity
           style={[styles.segmentButton, activeSegment === 'minhas' && styles.segmentButtonActive]}
@@ -130,7 +124,6 @@ export default function PlacelistsScreen() {
         </TouchableOpacity>
       </View>
       
-      {/* Se a aba "minhas" estiver ativa, mostra esta lista */}
       {activeSegment === 'minhas' && (
         <FlatList
           data={minhasListas}
@@ -163,7 +156,6 @@ export default function PlacelistsScreen() {
         />
       )}
 
-      {/* Botão FAB (igual) */}
       {activeSegment === 'minhas' && (
         <TouchableOpacity
           style={styles.fab}
@@ -176,7 +168,6 @@ export default function PlacelistsScreen() {
   );
 }
 
-// Estilos (os mesmos de antes)
 const styles = StyleSheet.create({
   safeArea: { 
     flex: 1, 

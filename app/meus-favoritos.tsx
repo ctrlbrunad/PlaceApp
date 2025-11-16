@@ -1,15 +1,15 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -110,10 +110,31 @@ export default function MeusFavoritosScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
-  emptyContainer: { flex: 1, padding: 20, marginTop: 50, alignItems: 'center' },
-  emptyText: { fontSize: 16, color: Colors.grey, textAlign: 'center' },
-  itemContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, padding: 15, marginHorizontal: 15, marginVertical: 8, borderRadius: 12, ...Platform.select({ ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, }, android: { elevation: 2, }, }), },
+  loadingContainer: 
+  { flex: 1,
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: Colors.background 
+  },
+  emptyContainer: 
+  { flex: 1, 
+    padding: 20, 
+    marginTop: 50, 
+    alignItems: 'center' 
+  },
+  emptyText: 
+  { fontSize: 16, 
+    color: Colors.grey, 
+    textAlign: 'center' 
+  },
+  itemContainer: 
+  { flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: Colors.white, 
+    padding: 15, 
+    marginHorizontal: 15, 
+    marginVertical: 8, 
+    borderRadius: 12, ...Platform.select({ ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, }, android: { elevation: 2, }, }), },
   itemImage: { width: 60, height: 60, borderRadius: 8, backgroundColor: Colors.lightGrey, resizeMode: 'cover' },
   itemInfo: { flex: 1, marginLeft: 15 },
   itemNome: { fontSize: 16, fontWeight: 'bold', color: Colors.text, marginBottom: 4 },

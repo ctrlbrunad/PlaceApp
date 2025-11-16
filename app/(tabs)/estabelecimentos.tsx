@@ -16,7 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
 import api from '../../src/services/api';
 
-// Interface
 interface Estabelecimento { 
   id: string; 
   nome: string; 
@@ -33,11 +32,11 @@ export default function EstabelecimentosScreen() {
   
   const { categoria, search } = useLocalSearchParams<{ categoria: string, search: string }>();
   const tituloDaTela = categoria || (search ? `Busca por "${search}"` : "Estabelecimentos");
-  const router = useRouter(); // 2. INICIAR O 'router'
+  const router = useRouter(); 
 
   useEffect(() => {
     const buscarDados = async () => { 
-      // ... (Lógica de busca, igual à anterior)
+    
       setIsLoading(true); 
       let endpoint = '/estabelecimentos'; 
       if (categoria) {
@@ -62,7 +61,6 @@ export default function EstabelecimentosScreen() {
     buscarDados();
   }, [categoria, search]);
 
-  // ... (handleToggleFavorito, igual ao anterior)
   const handleToggleFavorito = async (estabelecimentoId: string) => {
     const novosFavoritos = new Set(favoritos);
     if (novosFavoritos.has(estabelecimentoId)) {
@@ -79,7 +77,6 @@ export default function EstabelecimentosScreen() {
     }
   };
 
-  // ... (renderItem, igual ao anterior)
   const renderItem = ({ item }: { item: Estabelecimento }) => {
     const imageUrl = (item.images && item.images.length > 0)
       ? item.images[0]
@@ -153,10 +150,10 @@ export default function EstabelecimentosScreen() {
         }
       />
       
-      {/* --- 3. ADICIONAR O BOTÃO FLUTUANTE (FAB) --- */}
+      {/* ADICIONA O BOTÃO FLUTUANTE */}
       <TouchableOpacity
         style={styles.fab}
-        // Navega para a nova tela de sugestão
+      
         onPress={() => router.push('/sugerir-estabelecimento')}
       >
         <Ionicons name="add" size={32} color={Colors.white} />
@@ -165,11 +162,9 @@ export default function EstabelecimentosScreen() {
   );
 }
 
-// --- 4. ATUALIZAR OS ESTILOS (Adicionar 'fab') ---
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
-  // ... (estilos de loading, empty, item, etc. - iguais aos anteriores)
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
   emptyContainer: { flex: 1, padding: 20, marginTop: 50, alignItems: 'center' },
   emptyText: { fontSize: 16, color: Colors.grey, textAlign: 'center' },
@@ -194,7 +189,6 @@ const styles = StyleSheet.create({
     padding: 5, 
   },
   
-  // --- Adicione este estilo para o FAB ---
   fab: {
     position: 'absolute',
     bottom: 30, 
@@ -202,7 +196,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30, 
-    backgroundColor: Colors.primary, // Laranja
+    backgroundColor: Colors.primary, 
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
