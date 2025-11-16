@@ -1,4 +1,3 @@
-// --- 1. ADICIONAR 'Alert' À LISTA DE IMPORTS ---
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -11,7 +10,7 @@ import ProfileMenuModal from '../../components/ProfileMenuModal';
 
 const colors = Colors;
 
-// Interface da Review (igual)
+// Interface da Review (correta)
 interface MinhaReview {
   id: string | number;
   nota: number;
@@ -20,6 +19,19 @@ interface MinhaReview {
   estabelecimento_nome: string;
   estabelecimento_id: string;
 }
+
+// --- 1. CORREÇÃO DO CAMINHO (../../ e 'avatares') ---
+const avatarImages = {
+  'default.png': require('../../assets/images/avatares/default.png'),
+  'avatar1.png': require('../../assets/images/avatares/avatar1.png'),
+  'avatar2.png': require('../../assets/images/avatares/avatar2.png'),
+  'avatar3.png': require('../../assets/images/avatares/avatar3.png'),
+  'avatar4.png': require('../../assets/images/avatares/avatar4.png'),
+  'avatar5.png': require('../../assets/images/avatares/avatar5.png'),
+  'avatar6.png': require('../../assets/images/avatares/avatar6.png'),
+  'avatar7.png': require('../../assets/images/avatares/avatar7.png'),
+  'avatar8.png': require('../../assets/images/avatares/avatar8.png'),
+};
 
 export default function ProfileScreen() {
   const { user, logout, isLoading } = useAuth();
@@ -31,51 +43,40 @@ export default function ProfileScreen() {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const router = useRouter(); 
 
+  // useEffect (correto)
   useEffect(() => {
-    if (!user) {
-      return;
-    }
-
+    if (!user) return;
     const fetchProfileData = async () => {
       try {
         setIsDataLoading(true);
-        
         const [statsRes, reviewsRes] = await Promise.all([
           api.get('/users/me'),        
           api.get('/reviews/me') 
         ]);
-
         const { reviewsCount, listsCount } = statsRes.data;
-        setStats({
-          reviews: reviewsCount || 0,
-          lists: listsCount || 0,
-        });
-        
+        setStats({ reviews: reviewsCount || 0, lists: listsCount || 0 });
         setReviews(reviewsRes.data.data);
-
       } catch (error) {
         console.error("Erro ao buscar dados do perfil:", error);
-        // O 'Alert' agora será encontrado
         Alert.alert("Erro", "Não foi possível carregar todos os dados do perfil.");
       } finally {
         setIsDataLoading(false);
       }
     };
-
     fetchProfileData();
   }, [user]); 
 
-  // Loading da autenticação (tela inteira)
   if (isLoading || !user) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
     <>
+      {/* Cabeçalho (correto) */}
       <Stack.Screen
         options={{
           title: 'Perfil',
@@ -97,19 +98,21 @@ export default function ProfileScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         {/* Card do Perfil */}
         <View style={styles.profileCard}>
-          <TouchableOpacity style={styles.avatarContainer}>
-            {user.imageUrl ? ( 
-              <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatarPlaceholder, { borderColor: colors.primary }]}>
-                <FontAwesome name="camera" size={24} color={colors.text} />
-              </View>
-            )}
+          <TouchableOpacity 
+            style={styles.avatarContainer}
+            onPress={() => router.push('/selecionar-avatar')}
+          >
+            {/* --- 2. CORREÇÃO DO TIPO (para o erro da imagem anterior) --- */}
+            <Image 
+              source={avatarImages[ (user?.avatar_id || 'default.png') as keyof typeof avatarImages ]} 
+              style={styles.avatar} 
+            />
           </TouchableOpacity>
           
           <Text style={[styles.userName, { color: colors.text }]}>{user.nome}</Text>
           <Text style={styles.userHandle}>{user.email}</Text> 
 
+          {/* Stats (correto) */}
           <View style={styles.statsContainer}>
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
               <FontAwesome name="star" size={24} color={colors.primary} />
@@ -128,7 +131,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Seção "Avaliações Recentes" */}
+        {/* Avaliações Recentes (correto) */}
         <Text style={styles.sectionTitle}>Avaliações Recentes</Text>
         {isDataLoading ? (
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -158,7 +161,6 @@ export default function ProfileScreen() {
         )}
       </ScrollView>
 
-      {/* Modal do Menu */}
       <ProfileMenuModal
         visible={isMenuVisible}
         onClose={() => setMenuVisible(false)}
@@ -168,7 +170,7 @@ export default function ProfileScreen() {
   );
 }
 
-// --- Estilos (Os mesmos de antes) ---
+// Estilos (corretos)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -195,21 +197,16 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 16,
+    borderRadius: 63, 
+    borderWidth: 3,
+    borderColor: colors.primary,
+    overflow: 'hidden',
   },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
     backgroundColor: colors.lightGrey,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: colors.primary, 
   },
   userName: {
     fontSize: 24,
@@ -243,8 +240,6 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 4,
   },
-
-  // (Estilos para a nova seção de reviews)
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import api from '../services/api';
 
-// Interface User (como no seu arquivo)
+// --- ATUALIZAÇÃO AQUI ---
 interface User {
   id: string; 
   nome: string;
@@ -10,9 +10,10 @@ interface User {
   imageUrl?: string | null;
   reviews?: number;
   lists?: number;
+  avatar_id?: string; // <-- ADICIONADO PARA O AVATAR
 }
 
-// --- 1. ATUALIZAR A INTERFACE 'AuthContextData' ---
+// Interface AuthContextData (correta)
 interface AuthContextData {
   token: string | null;
   user: User | null;
@@ -20,10 +21,9 @@ interface AuthContextData {
   isLoading: boolean;
   login: (email: string, senha: string) => Promise<void>;
   logout: () => void;
-  updateUser: (newUserData: User) => void; // <-- ADICIONADO AQUI
+  updateUser: (newUserData: User) => void;
 }
 
-// Atualiza o 'createContext' para corresponder à nova interface
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // useEffect (como no seu arquivo, está correto)
+  // useEffect (correto)
   useEffect(() => {
     async function loadStoredData() {
       try {
@@ -52,27 +52,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadStoredData();
   }, []);
 
-  // login (como no seu arquivo, está correto)
+  // login (correto)
   const login = async (email: string, senha: string) => {
     try {
       const response = await api.post('/auth/login', { email, senha });
-      
       const { token: newToken, usuario: newUsuario } = response.data;
-
       setToken(newToken);
       setUser(newUsuario);
-
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       await AsyncStorage.setItem('userToken', newToken);
       await AsyncStorage.setItem('userData', JSON.stringify(newUsuario));
-
     } catch (error) {
       console.error('Falha no login', error);
       throw error;
     }
   };
 
-  // logout (como no seu arquivo, está correto)
+  // logout (correto)
   const logout = async () => {
     try {
       setToken(null);
@@ -85,12 +81,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // --- 2. ADICIONAR A NOVA FUNÇÃO 'updateUser' ---
-  // (Esta é a função que a tela 'Configurações' vai chamar)
+  // updateUser (correto)
   const updateUser = async (newUserData: User) => {
-    setUser(newUserData); // Atualiza o estado global
+    setUser(newUserData); 
     try {
-      // Atualiza também o cache local
       await AsyncStorage.setItem('userData', JSON.stringify(newUserData));
     } catch (e) {
       console.error('Falha ao atualizar o usuário no AsyncStorage', e);
@@ -105,14 +99,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       login,
       logout,
-      updateUser // <-- 3. EXPORTAR A NOVA FUNÇÃO
+      updateUser 
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook customizado (como no seu arquivo)
+// useAuth (correto)
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

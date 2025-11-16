@@ -37,9 +37,10 @@ interface Categoria {
 // Categorias (corretas)
 const categorias: Categoria[] = [
   { key: 'hamburgueria', nome: 'Hamburgueria', icon: 'hamburger', pack: 'FontAwesome5' },
+  { key: 'restaurante', nome: 'Restaurante', icon: 'utensils', pack: 'FontAwesome5' },
   { key: 'pizzaria', nome: 'Pizzaria', icon: 'pizza-slice', pack: 'FontAwesome5' },
   { key: 'cafeteria', nome: 'Cafeteria', icon: 'coffee', pack: 'FontAwesome5' },
-  { key: 'restaurante', nome: 'Restaurante', icon: 'utensils', pack: 'FontAwesome5' },
+  { key: 'sorveteria', nome: 'Sorveteria', icon: 'ice-cream', pack: 'FontAwesome5' },
 ];
 
 export default function HomeScreen() {
