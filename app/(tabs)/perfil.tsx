@@ -1,6 +1,7 @@
 import { Feather, FontAwesome } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native'; // --- 2. IMPORTAR 'useFocusEffect' ---
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react'; // --- 1. IMPORTAR 'useCallback' ---
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Colors from '../../constants/Colors';
 import { useAuth } from '../../src/context/AuthContext';
@@ -10,7 +11,7 @@ import ProfileMenuModal from '../../components/ProfileMenuModal';
 
 const colors = Colors;
 
-// Interface da Review (correta)
+// ... (Interface MinhaReview)
 interface MinhaReview {
   id: string | number;
   nota: number;
@@ -20,7 +21,7 @@ interface MinhaReview {
   estabelecimento_id: string;
 }
 
-// --- 1. CORREÇÃO DO CAMINHO (../../ e 'avatares') ---
+// ... (avatarImages)
 const avatarImages = {
   'default.png': require('../../assets/images/avatares/default.png'),
   'avatar1.png': require('../../assets/images/avatares/avatar1.png'),
@@ -43,29 +44,48 @@ export default function ProfileScreen() {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const router = useRouter(); 
 
-  // useEffect (correto)
-  useEffect(() => {
-    if (!user) return;
-    const fetchProfileData = async () => {
-      try {
-        setIsDataLoading(true);
-        const [statsRes, reviewsRes] = await Promise.all([
-          api.get('/users/me'),        
-          api.get('/reviews/me') 
-        ]);
-        const { reviewsCount, listsCount } = statsRes.data;
-        setStats({ reviews: reviewsCount || 0, lists: listsCount || 0 });
-        setReviews(reviewsRes.data.data);
-      } catch (error) {
-        console.error("Erro ao buscar dados do perfil:", error);
-        Alert.alert("Erro", "Não foi possível carregar todos os dados do perfil.");
-      } finally {
-        setIsDataLoading(false);
+  // --- 3. SUBSTITUIR 'useEffect' POR 'useFocusEffect' ---
+  // Isso garante que os dados sejam recarregados toda vez
+  // que o usuário visitar esta aba.
+  useFocusEffect(
+    useCallback(() => {
+      // Se o usuário não estiver logado, não faz nada
+      if (!user) {
+        setIsDataLoading(false); // Para o loading
+        return;
       }
-    };
-    fetchProfileData();
-  }, [user]); 
 
+      const fetchProfileData = async () => {
+        try {
+          setIsDataLoading(true);
+          
+          const [statsRes, reviewsRes] = await Promise.all([
+            api.get('/users/me'),        
+            api.get('/reviews/me') 
+          ]);
+
+          const { reviewsCount, listsCount } = statsRes.data;
+          setStats({
+            reviews: reviewsCount || 0,
+            lists: listsCount || 0,
+          });
+          
+          setReviews(reviewsRes.data.data);
+
+        } catch (error) {
+          console.error("Erro ao buscar dados do perfil:", error);
+          Alert.alert("Erro", "Não foi possível carregar todos os dados do perfil.");
+        } finally {
+          setIsDataLoading(false);
+        }
+      };
+
+      fetchProfileData();
+
+    }, [user]) // A dependência [user] garante que ele também rode se o usuário logar/deslogar
+  ); 
+
+  // ... (if isLoading - permanece o mesmo)
   if (isLoading || !user) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -76,7 +96,7 @@ export default function ProfileScreen() {
 
   return (
     <>
-      {/* Cabeçalho (correto) */}
+      {/* ... (Stack.Screen - permanece o mesmo) */}
       <Stack.Screen
         options={{
           title: 'Perfil',
@@ -95,14 +115,13 @@ export default function ProfileScreen() {
         }}
       />
       
+      {/* ... (ScrollView e todo o JSX - permanecem os mesmos) */}
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        {/* Card do Perfil */}
         <View style={styles.profileCard}>
           <TouchableOpacity 
             style={styles.avatarContainer}
             onPress={() => router.push('/selecionar-avatar')}
           >
-            {/* --- 2. CORREÇÃO DO TIPO (para o erro da imagem anterior) --- */}
             <Image 
               source={avatarImages[ (user?.avatar_id || 'default.png') as keyof typeof avatarImages ]} 
               style={styles.avatar} 
@@ -112,7 +131,6 @@ export default function ProfileScreen() {
           <Text style={[styles.userName, { color: colors.text }]}>{user.nome}</Text>
           <Text style={styles.userHandle}>{user.email}</Text> 
 
-          {/* Stats (correto) */}
           <View style={styles.statsContainer}>
             <View style={[styles.statBox, { backgroundColor: `${colors.primary}20` }]}>
               <FontAwesome name="star" size={24} color={colors.primary} />
@@ -131,7 +149,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Avaliações Recentes (correto) */}
         <Text style={styles.sectionTitle}>Avaliações Recentes</Text>
         {isDataLoading ? (
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -170,11 +187,11 @@ export default function ProfileScreen() {
   );
 }
 
-// Estilos (corretos)
+// --- Estilos (Os mesmos de antes) ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.background, 
   },
   scrollContent: {
     padding: 16,
@@ -183,6 +200,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.background, 
   },
   profileCard: {
     backgroundColor: colors.white, 
