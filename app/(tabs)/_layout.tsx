@@ -56,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="estabelecimentos"
         options={{
-          title: 'Places', 
+          title: 'Estabelecimentos', 
           tabBarIcon: ({ color }) => (
             <TabBarIcon 
               name="storefront-outline" 

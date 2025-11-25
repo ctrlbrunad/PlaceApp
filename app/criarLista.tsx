@@ -1,15 +1,16 @@
-import axios from 'axios';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Platform,
+  ScrollView,
   StyleSheet,
   Switch,
-  Text, TextInput,
+  Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
@@ -17,6 +18,7 @@ import api from '../src/services/api';
 
 export default function CriarListaScreen() {
   const [nome, setNome] = useState('');
+  const [descricao, setDescricao] = useState(''); // 1. Novo Estado
   const [isPublica, setIsPublica] = useState(false); 
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -31,6 +33,7 @@ export default function CriarListaScreen() {
     try {
       await api.post('/listas', {
         nome: nome,
+        descricao: descricao, // 2. Envia a descrição
         publica: isPublica,
         estabelecimentos: [] 
       });
@@ -40,29 +43,23 @@ export default function CriarListaScreen() {
 
     } catch (error) {
       setIsLoading(false);
-      if (axios.isAxiosError(error) && error.response) {
-        Alert.alert('Erro ao Salvar', error.response.data.message);
-      } else {
-        console.error(error);
-        Alert.alert('Erro', 'Não foi possível criar a lista.');
-      }
+      console.error(error);
+      Alert.alert('Erro', 'Não foi possível criar a lista.');
     }
   };
 
   return (
-
     <SafeAreaView style={styles.container}>
-      {/* Configura o cabeçalho desta tela */}
       <Stack.Screen 
         options={{ 
           title: 'Criar Nova Lista',
           headerStyle: { backgroundColor: Colors.background },
           headerTitleStyle: { color: Colors.text },
-          headerTintColor: Colors.text, 
+          headerTintColor: Colors.text,
         }} 
       />
       
-      <View style={styles.form}>
+      <ScrollView contentContainerStyle={styles.form}>
         <Text style={styles.label}>Nome da Lista</Text>
         <TextInput
           style={styles.input}
@@ -70,6 +67,19 @@ export default function CriarListaScreen() {
           value={nome}
           onChangeText={setNome}
           placeholderTextColor={Colors.grey}
+        />
+
+        {/* 3. Novo Campo de Descrição */}
+        <Text style={styles.label}>Descrição (Opcional)</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]} // Estilo extra para área de texto
+          placeholder="Ex: Minha seleção dos melhores cafés para trabalhar..."
+          value={descricao}
+          onChangeText={setDescricao}
+          placeholderTextColor={Colors.grey}
+          multiline={true}
+          numberOfLines={3}
+          textAlignVertical="top" // Importante para Android
         />
 
         <View style={styles.switchContainer}>
@@ -95,7 +105,7 @@ export default function CriarListaScreen() {
             <Text style={styles.buttonText}>Criar Lista</Text>
           </TouchableOpacity>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -124,6 +134,11 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     fontSize: 16,
     color: Colors.text,
+  },
+  // 4. Estilo para a área de texto
+  textArea: {
+    height: 100,
+    paddingTop: 15,
   },
   switchContainer: {
     flexDirection: 'row',

@@ -20,7 +20,6 @@ import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window'); 
 
-// Interface do Estabelecimento
 interface Estabelecimento {
   id: string; 
   nome: string;
@@ -33,7 +32,6 @@ interface Estabelecimento {
   horario?: string;
 }
 
-// --- 1. NOVA INTERFACE PARA A REVIEW ---
 interface Review {
   id: string | number;
   usuario_nome: string;
@@ -47,10 +45,11 @@ export default function EstabelecimentoDetalheScreen() {
   const { id } = useLocalSearchParams(); 
   
   const [estabelecimento, setEstabelecimento] = useState<Estabelecimento | null>(null);
-  
-  // --- 2. NOVO ESTADO PARA AS REVIEWS ---
   const [reviews, setReviews] = useState<Review[]>([]);
   
+  const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
+  const [visitados, setVisitados] = useState<Set<string>>(new Set());
+
   const [isLoading, setIsLoading] = useState(true); 
 
   const [isModalVisible, setModalVisible] = useState(false);
@@ -64,14 +63,17 @@ export default function EstabelecimentoDetalheScreen() {
       try {
         setIsLoading(true);
         
-        // --- 3. BUSCAR OS DADOS DO LOCAL E AS REVIEWS AO MESMO TEMPO ---
-        const [estabRes, reviewsRes] = await Promise.all([
+        const [estabRes, reviewsRes, favIdsRes, visitIdsRes] = await Promise.all([
           api.get(`/estabelecimentos/${id}`),
-          api.get(`/reviews/${id}`)
+          api.get(`/reviews/${id}`),
+          api.get('/favoritos/me/ids'),
+          api.get('/visitados/me/ids')
         ]);
 
         setEstabelecimento(estabRes.data);
-        setReviews(reviewsRes.data.data); // O backend retorna { data: [...] }
+        setReviews(reviewsRes.data.data);
+        setFavoritos(new Set(favIdsRes.data));
+        setVisitados(new Set(visitIdsRes.data));
 
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
@@ -96,8 +98,8 @@ export default function EstabelecimentoDetalheScreen() {
       Alert.alert('Sucesso!', 'Sua avaliação foi enviada.');
       setModalVisible(false);
       
-      // (Opcional: Recarregar a página para ver a nova avaliação)
-      // fetchData(); 
+      const reviewsRes = await api.get(`/reviews/${estabelecimento.id}`);
+      setReviews(reviewsRes.data.data);
       
     } catch (error) {
       console.error(error);
@@ -109,6 +111,42 @@ export default function EstabelecimentoDetalheScreen() {
 
   const handleAddToList = () => {
     setListModalVisible(true);
+  };
+
+  const handleToggleFavorito = async () => {
+     if (!estabelecimento) return;
+     const estabId = estabelecimento.id;
+     const novosFavoritos = new Set(favoritos);
+     if (novosFavoritos.has(estabId)) {
+       novosFavoritos.delete(estabId);
+     } else {
+       novosFavoritos.add(estabId);
+     }
+     setFavoritos(novosFavoritos);
+     try {
+       await api.post(`/favoritos/${estabId}`);
+     } catch (error) {
+       console.error(error);
+       setFavoritos(new Set(favoritos)); // Reverte
+     }
+  };
+
+  const handleToggleVisitado = async () => {
+     if (!estabelecimento) return;
+     const estabId = estabelecimento.id;
+     const novosVisitados = new Set(visitados);
+     if (novosVisitados.has(estabId)) {
+       novosVisitados.delete(estabId);
+     } else {
+       novosVisitados.add(estabId);
+     }
+     setVisitados(novosVisitados);
+     try {
+       await api.post(`/visitados/${estabId}`);
+     } catch (error) {
+       console.error(error);
+       setVisitados(new Set(visitados)); // Reverte
+     }
   };
 
   if (isLoading || !estabelecimento) {
@@ -132,7 +170,6 @@ export default function EstabelecimentoDetalheScreen() {
         }}
       />
       
-      {/* Carrossel */}
       <View style={styles.carouselContainer}>
         <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
           {estabelecimento.images && estabelecimento.images.length > 0 ? (
@@ -152,14 +189,36 @@ export default function EstabelecimentoDetalheScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Conteúdo Principal */}
       <View style={styles.infoContainer}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>{estabelecimento.nome}</Text>
-          <Text style={styles.rating}>
-           {(parseFloat(String(estabelecimento.media_notas || estabelecimento.rating || 0))).toFixed(1)}
-            <Ionicons name="star" size={16} color={Colors.primary} />
-          </Text>
+            <View style={{flex: 1, marginRight: 10}}> 
+                <Text style={styles.title}>{estabelecimento.nome}</Text>
+            </View>
+            
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <TouchableOpacity onPress={handleToggleVisitado} style={{marginRight: 15}}>
+                     <Ionicons 
+                        name={visitados.has(estabelecimento.id) ? "checkmark-circle" : "checkmark-circle-outline"} 
+                        size={32} 
+                        color={visitados.has(estabelecimento.id) ? Colors.primary : Colors.grey} 
+                    />
+                </TouchableOpacity>
+                
+                <TouchableOpacity onPress={handleToggleFavorito}>
+                     <Ionicons 
+                        name={favoritos.has(estabelecimento.id) ? "heart" : "heart-outline"} 
+                        size={32} 
+                        color={favoritos.has(estabelecimento.id) ? Colors.primary : Colors.grey} 
+                    />
+                </TouchableOpacity>
+            </View>
+        </View>
+        
+        <View style={styles.ratingRow}>
+           <Text style={styles.rating}>
+             {(parseFloat(String(estabelecimento.media_notas || 0))).toFixed(1)}
+              <Ionicons name="star" size={16} color={Colors.primary} />
+           </Text>
         </View>
 
         <View style={styles.actionsContainer}>
@@ -187,7 +246,6 @@ export default function EstabelecimentoDetalheScreen() {
           <Text style={styles.infoText}>{estabelecimento.horario || 'Não informado'}</Text>
         </View>
 
-        {/* --- 4. NOVA SEÇÃO: AVALIAÇÕES RECENTES --- */}
         <View style={styles.reviewsSection}>
           <Text style={styles.sectionTitle}>Avaliações Recentes</Text>
           
@@ -204,7 +262,6 @@ export default function EstabelecimentoDetalheScreen() {
                   </View>
                 </View>
                 
-                {/* Só mostra o comentário se ele existir */}
                 {review.comentario ? (
                   <Text style={styles.reviewComment}>{review.comentario}</Text>
                 ) : (
@@ -218,8 +275,6 @@ export default function EstabelecimentoDetalheScreen() {
             ))
           )}
         </View>
-        {/* ------------------------------------------ */}
-
       </View>
 
       <AvaliacaoModal
@@ -237,7 +292,6 @@ export default function EstabelecimentoDetalheScreen() {
   );
 }
 
-// --- ESTILOS ATUALIZADOS ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -253,10 +307,6 @@ const styles = StyleSheet.create({
     width: width,
     height: 300,
     backgroundColor: Colors.background,
-  },
-  carousel: { // Adicionado para manter o carrossel funcionando
-    width: width,
-    height: 300,
   },
   image: {
     width: width,
@@ -290,15 +340,16 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20, 
+    alignItems: 'center', 
+    marginBottom: 5, 
   },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
     color: Colors.text,
-    flex: 1,
-    marginRight: 10,
+  },
+  ratingRow: {
+      marginBottom: 20,
   },
   rating: {
     fontSize: 32,
@@ -350,8 +401,6 @@ const styles = StyleSheet.create({
     color: '#555',
     lineHeight: 20,
   },
-
-  // --- NOVOS ESTILOS PARA REVIEWS ---
   reviewsSection: {
     marginTop: 20,
     paddingTop: 20,

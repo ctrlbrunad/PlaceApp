@@ -31,16 +31,18 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
   const router = useRouter();
   
   const handleMenuItemPress = (key: string) => {
-    onClose(); 
+    onClose(); // Fecha o modal
     
     if (key === 'avaliacoes') {
       router.push('/minhas-avaliacoes');
     } else if (key === 'favoritos') {
       router.push('/meus-favoritos');
+    } else if (key === 'visitados') {
+      router.push('/locais-visitados' as any);
+    } else if (key === 'conquistas') {
+      router.push('/conquistas');
     } else if (key === 'configuracoes') { 
       router.push('/configuracoes'); 
-    } else if (key === 'conquistas') { 
-      router.push('/conquistas');
     } else {
       alert(`Opção "${key}" clicada. Navegação não implementada.`);
     }
@@ -70,7 +72,6 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
               onPress={() => handleMenuItemPress(item.key)}
             >
               
-              {/* Ícones (corretos, como no seu arquivo) */}
               {item.key === 'avaliacoes' && <FontAwesome name="star" size={22} color={Colors.primary} />}
               {item.key === 'favoritos' && <FontAwesome name="heart" size={22} color={Colors.primary} />}
               {item.key === 'visitados' && <Ionicons name="location-sharp" size={22} color={Colors.primary} />}
@@ -82,7 +83,6 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
             </TouchableOpacity>
           ))}
           
-          {/* Botão Sair (correto) */}
           <TouchableOpacity 
             style={[styles.menuButton, styles.logoutButton]}
             onPress={() => {
@@ -99,7 +99,6 @@ export default function ProfileMenuModal({ visible, onClose, onLogout }: Props) 
   );
 }
 
-// Estilos (os mesmos do seu arquivo)
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,

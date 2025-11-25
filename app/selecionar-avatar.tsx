@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform, // --- 1. ADICIONADO AQUI ---
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,7 @@ import Colors from '../constants/Colors';
 import { useAuth } from '../src/context/AuthContext';
 import api from '../src/services/api';
 
+// Mapa de Avatares
 const AVATARS = [
   'default.png', 
   'avatar1.png', 
@@ -23,9 +25,6 @@ const AVATARS = [
   'avatar3.png',
   'avatar4.png',
   'avatar5.png',
-  'avatar6.png',
-  'avatar7.png',
-  'avatar8.png',
 ];
 
 const avatarImages = {
@@ -35,9 +34,6 @@ const avatarImages = {
   'avatar3.png': require('../assets/images/avatares/avatar3.png'),
   'avatar4.png': require('../assets/images/avatares/avatar4.png'),
   'avatar5.png': require('../assets/images/avatares/avatar5.png'),
- 'avatar6.png': require('../assets/images/avatares/avatar6.png'),
- 'avatar7.png': require('../assets/images/avatares/avatar7.png'),
- 'avatar8.png': require('../assets/images/avatares/avatar8.png'),
 };
 
 export default function SelecionarAvatarScreen() {
@@ -52,14 +48,17 @@ export default function SelecionarAvatarScreen() {
       router.back();
       return;
     }
+    
     setLoading(true);
     try {
       const response = await api.put('/users/me', {
         avatar_id: selectedAvatar, 
       });
+
       updateUser(response.data.usuario);
       Alert.alert('Sucesso!', 'Avatar atualizado.');
       router.back();
+
     } catch (error) {
       console.error("Erro ao salvar avatar:", error);
       Alert.alert('Erro', 'Não foi possível salvar seu avatar.');
@@ -88,8 +87,8 @@ export default function SelecionarAvatarScreen() {
                 style={[styles.avatarWrapper, isSelected && styles.avatarSelected]}
                 onPress={() => setSelectedAvatar(avatarName)}
               >
-                {/* --- 2. CORREÇÃO DO TIPO --- */}
                 <Image 
+                  // Correção de tipo que fizemos antes
                   source={avatarImages[avatarName as keyof typeof avatarImages]} 
                   style={styles.avatar} 
                 />
@@ -99,7 +98,6 @@ export default function SelecionarAvatarScreen() {
         </View>
       </ScrollView>
 
-      {/* Footer (correto) */}
       <View style={styles.footer}>
         <TouchableOpacity 
           style={styles.button}
@@ -117,7 +115,6 @@ export default function SelecionarAvatarScreen() {
   );
 }
 
-// Estilos (corretos)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -155,6 +152,11 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',
+    // Platform agora está disponível
+    ...Platform.select({
+      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, },
+      android: { elevation: 4, },
+    }),
   },
   buttonText: {
     color: Colors.white,
