@@ -25,6 +25,9 @@ const AVATARS = [
   'avatar3.png',
   'avatar4.png',
   'avatar5.png',
+  'avatar6.png',
+  'avatar7.png',
+  'avatar8.png',
 ];
 
 const avatarImages = {
@@ -34,6 +37,9 @@ const avatarImages = {
   'avatar3.png': require('../assets/images/avatares/avatar3.png'),
   'avatar4.png': require('../assets/images/avatares/avatar4.png'),
   'avatar5.png': require('../assets/images/avatares/avatar5.png'),
+  'avatar6.png': require('../assets/images/avatares/avatar6.png'),
+  'avatar7.png': require('../assets/images/avatares/avatar7.png'),
+  'avatar8.png': require('../assets/images/avatares/avatar8.png'),
 };
 
 export default function SelecionarAvatarScreen() {
